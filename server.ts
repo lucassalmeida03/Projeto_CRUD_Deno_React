@@ -3,7 +3,7 @@ import { Request, Response } from "express"
 import responser from 'responser'
 import morgan from 'morgan'
 import { routes } from "./routes/index.ts"
-import { connectDB } from "./globals/ConnectDB.ts"
+import { connectDB } from "./config/ConnectDB.ts"
 const app = express()
 const PORT = process.env.PORT || 3000;
 const morganConfig = morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms')

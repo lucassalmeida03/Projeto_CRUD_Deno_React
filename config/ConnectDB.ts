@@ -1,4 +1,4 @@
-import { throwlhos } from "./Throwlhos.ts";
+import { throwlhos } from "../globals/Throwlhos.ts";
 import mongoose from "mongoose";
 
 export async function connectDB(): Promise<void> {
