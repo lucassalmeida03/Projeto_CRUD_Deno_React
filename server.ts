@@ -1,20 +1,25 @@
 import express from 'express';
 import { Request, Response } from "express"
 import responser from 'responser'
+import morgan from 'morgan'
 import { routes } from "./routes/index.ts"
-
+import { connectDB } from "./globals/ConnectDB.ts"
 const app = express()
-const port = 3000
-
-app.use(routes)
-app.use(responser)
+const PORT = process.env.PORT || 3000;
+const morganConfig = morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms')
+ 
+app.use(responser.default)
 app.use(express.json())
+app.use(morganConfig)
+app.use(routes)
 
-
+await connectDB()
+ 
 app.get('/', (req: Request, res: Response) => {
   res.send_ok('Hello World!')
 })
 
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta: ${port}`)
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta: ${PORT}`)
 })
