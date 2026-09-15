@@ -45,7 +45,7 @@ class usersController {
 
    create = async (req: Request, res: Response) => {
     try {
-      const { name, email, password, role = "user" } = req.body;
+      const { name, email, password, role = "customer" } = req.body;
 
       const errors = rc.check(
         { name },
@@ -59,8 +59,8 @@ class usersController {
       const newUser = await this.userService.createUser({name, email, password, role});
 
       return res.send_created("Usuário criado com sucesso!", { data: newUser });
-    } catch (error) {
       
+    } catch (error) {
       return res.send_badRequest((error as Error).message);
     }
   }

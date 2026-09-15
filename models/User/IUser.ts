@@ -2,7 +2,8 @@ import { IBaseInterface } from '../../base/IBaseInterface.ts'
 
 export enum userRole {
   ADMIN = 'admin',
-  USER = 'user'
+  SELLER = 'seller',
+  CUSTOMER= "customer"
 }
 
 export interface IUser extends IBaseInterface {

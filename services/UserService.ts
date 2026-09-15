@@ -1,16 +1,13 @@
-import { UserModel, UserClass } from "../models/User/User.ts";
+import { UserClass, UserModel } from "../models/User/User.ts";
 import { IUser } from "../models/User/IUser.ts";
 import { throwlhos } from "../globals/Throwlhos.ts";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
-
-export class UserService {
-
+class UserService {
   async createUser(userData: IUser): Promise<IUser> {
-
     const emailExists = await UserModel.findOne({ email: userData.email });
     if (emailExists) {
-      throw new Error("E-mail já cadastrado no sistema.");
+      throw throwlhos.err_badRequest("E-mail já cadastrado no sistema.");
     }
 
     const saltRounds = 8;
@@ -19,26 +16,25 @@ export class UserService {
     const userEntity = new UserClass({
       ...userData,
       password: hashedPassword,
-    })
+    });
 
-     const newUser = await UserModel.create(userEntity);
-     return newUser
+    const newUser = await UserModel.create(userEntity);
+    return newUser;
   }
 
   async getAllUsers() {
-    const users = await UserModel.find()
+    const users = await UserModel.find();
 
-   if (!users) {
+    if (!users) {
       throw throwlhos.err_badRequest("Nenhum usuário encontrado.");
     }
 
-    return users
-
+    return users;
   }
-  
+
   async getUserById(id: string): Promise<IUser> {
     const user = await UserModel.findById(id);
-    
+
     if (!user) {
       throw throwlhos.err_badRequest("Usuário não encontrado.");
     }
@@ -46,7 +42,7 @@ export class UserService {
     return user;
   }
 
-async getUserByEmailWithPassword(email: string) {
+  async getUserByEmailWithPassword(email: string) {
     return await UserModel.findOne({ email }).select("+password");
   }
 
@@ -54,16 +50,17 @@ async getUserByEmailWithPassword(email: string) {
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { new: true, runValidators: true } 
+      { new: true, runValidators: true },
     );
 
     if (!updatedUser) {
-      throw throwlhos.err_badRequest("Usuário não encontrado para atualização.");
+      throw throwlhos.err_badRequest(
+        "Usuário não encontrado para atualização.",
+      );
     }
 
     return updatedUser;
   }
-
 
   async deleteUser(id: string): Promise<void> {
     const result = await UserModel.findByIdAndDelete(id);
@@ -73,3 +70,5 @@ async getUserByEmailWithPassword(email: string) {
     }
   }
 }
+
+export { UserService };

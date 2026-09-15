@@ -1,43 +1,97 @@
 import { ProductModel, ProductClass } from "../models/Product/Product.ts";
 import { IProduct } from "../models/Product/IProduct.ts";
+import { userRole } from "../models/User/IUser.ts"
 import { throwlhos } from "../globals/Throwlhos.ts";
+import {isValidObjectId} from "mongoose"
 
-export class ProductService {
+class ProductService {
   async createProduct(productData: IProduct): Promise<IProduct> {
     const productEntity = new ProductClass(productData);
-    return await ProductModel.create(productEntity);
+    return await ProductModel.create(productEntity)
   }
 
   async getAllProducts(): Promise<IProduct[]> {
-    return await ProductModel.find();
+    return await ProductModel.find().populate("user", "name email role")
   }
 
   async getProductById(id: string): Promise<IProduct> {
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findById(id).populate("user", "name email role")
     if (!product) {
       throw throwlhos.err_notFound("Produto não encontrado.");
     }
     return product;
   }
 
-  async updateProduct(id: string, updateData: Partial<IProduct>): Promise<IProduct> {
-    const updatedProduct = await ProductModel.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
+  async updateProduct(
+    id: string, 
+    updateData: Partial<IProduct>, 
+    userId: string, 
+    userRoleRequest: string): Promise<IProduct> {
 
-    if (!updatedProduct) {
-      throw throwlhos.err_notFound("Produto não encontrado para atualização.");
+      if (!isValidObjectId(id)) {
+      throw throwlhos.err_badRequest("ID do produto inválido.");
     }
 
-    return updatedProduct;
+    const product = await ProductModel.findById(id);
+
+    if (!product) {
+      throw throwlhos.err_badRequest("Produto não encontrado.");
+    }
+    
+    if(!product.user._id) {
+      throw throwlhos.err_badRequest("Id do dono do produto inexistente.")
+    }
+
+    const ownerId = typeof product.user === "object" && "_id" in product.user 
+      ? product.user._id.toString() 
+      : product.user.toString()
+
+    const isOwner = ownerId === userId;
+    const isAdmin = userRoleRequest === userRole.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+      throw throwlhos.err_unauthorized("Acesso negado: Você não tem permissão para alterar este produto.")
+    }
+
+    Object.assign(product, updateData);
+    await product.save()
+
+   return await product.populate("user", "name email role")
+
   }
 
-  async deleteProduct(id: string): Promise<void> {
-    const result = await ProductModel.findByIdAndDelete(id);
-    if (!result) {
-      throw throwlhos.err_notFound("Produto não encontrado para remoção.");
+  async deleteProduct(
+    productId: string, 
+    userId: string, 
+    userRoleRequest: string
+  ): Promise<void> {
+    
+    if (!isValidObjectId(productId)) {
+      throw throwlhos.err_badRequest("ID do produto inválido.");
     }
-  }
+
+    const product = await ProductModel.findById(productId);
+
+    if (!product) {
+      throw throwlhos.err_badRequest("Produto não encontrado.");
+    }
+
+    if(!product.user._id) {
+      throw throwlhos.err_badRequest("Id do usuário inexistente.")
+    }
+
+    const ownerId = typeof product.user === "object" && "_id" in product.user 
+      ? product.user._id.toString() 
+      : product.user.toString();
+
+    const isOwner = ownerId === userId;
+    const isAdmin = userRoleRequest === userRole.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+      throw new Error("Acesso negado: Você não tem permissão para remover este produto.");
+    }
+
+    await ProductModel.findByIdAndDelete(productId);
 }
+}
+export { ProductService }

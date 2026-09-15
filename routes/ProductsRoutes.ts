@@ -1,13 +1,19 @@
-// import { Router } from "express";
-// // import { ProductsController } from "../controllers/ProductsController.ts";
+import { Router } from "express";
+import { ProductsController } from "../controllers/ProductsController.ts";
+import { verifyUserAuthorization } from "../middlewares/VerifyUserAuthorization.ts";
 
-// const productsRoutes = Router();
-// // const productsController = new ProductsController();
+const productsRoutes = Router();
+const productsController = new ProductsController();
 
-// productsRoutes.post("/", productsController.create);
-// productsRoutes.get("/", productsController.getAll);
-// productsRoutes.get("/:id", productsController.getById);
-// productsRoutes.put("/:id", productsController.update);
-// productsRoutes.delete("/:id", productsController.delete);
+// Apenas admins e sellers podem acessar essas rotas
+productsRoutes.post("/", verifyUserAuthorization(["seller", "admin"]), productsController.create);
+productsRoutes.put("/:id", verifyUserAuthorization(["seller", "admin"]), productsController.update);
+productsRoutes.delete("/:id", verifyUserAuthorization(["seller", "admin"]), productsController.delete);
 
-// export { productsRoutes };
+
+productsRoutes.get("/", productsController.getAll)
+productsRoutes.get("/:id", productsController.getById);
+
+
+
+export { productsRoutes };
