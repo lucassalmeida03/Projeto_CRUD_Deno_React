@@ -1,11 +1,10 @@
 import express from 'express';
-import { Request, Response } from "express"
 import responser from 'responser'
 import morgan from 'morgan'
 import { routes } from "./routes/index.ts"
 import { connectDB } from "./config/ConnectDB.ts"
 const app = express()
-const PORT = process.env.PORT || 3000;
+const PORT = Deno.env.get("PORT") || 3000;
 const morganConfig = morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms')
  
 app.use(responser.default)
@@ -15,11 +14,6 @@ app.use(routes)
 
 await connectDB()
  
-app.get('/', (req: Request, res: Response) => {
-  res.send_ok('Hello World!')
-})
-
-
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta: ${PORT}`)
 })
