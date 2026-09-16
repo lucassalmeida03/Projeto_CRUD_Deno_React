@@ -3,7 +3,7 @@ import { usersRoutes } from "./UserRoutes.ts"
 import { sessionsRoutes } from "./SessionsRoutes.ts";
 import { ensureAuthenticated } from "../middlewares/EnsureAuthenticated.ts"
 import { productsRoutes } from "./ProductsRoutes.ts";
-// import { ordersRoutes } from "./OrdersRoutes.ts";
+import { ordersRoutes } from "./OrdersRoutes.ts";
 
 const routes = new Router()
 
@@ -14,6 +14,6 @@ routes.use("/sessions", sessionsRoutes)
 // Rotas privadas
 routes.use(ensureAuthenticated)
 routes.use("/products", productsRoutes)
-// routes.use("/orders", ordersRoutes)
+routes.use("/orders", ordersRoutes)
 
 export { routes }

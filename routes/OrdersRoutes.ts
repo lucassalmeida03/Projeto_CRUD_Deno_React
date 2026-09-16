@@ -1,12 +1,13 @@
-// import { Router } from "express";
-// // import { OrdersController } from "../controllers/OrdersController.ts";
+import { Router } from "express";
+import { OrdersController } from "../controllers/OrdersController.ts";
+import { verifyUserAuthorization } from "../middlewares/VerifyUserAuthorization.ts";
 
-// const ordersRoutes = Router();
-// // const ordersController = new OrdersController();
+const ordersRoutes = Router();
+const ordersController = new OrdersController();
 
-// ordersRoutes.post("/", ordersController.create);
-// ordersRoutes.get("/", ordersController.getAll);
-// ordersRoutes.get("/user/:userId", ordersController.getByUser);
-// ordersRoutes.patch(":id/status", ordersController.updateStatus);
+ordersRoutes.post("/", ordersController.create);
+ordersRoutes.get("/my-orders", verifyUserAuthorization(["customer", "admin"]), ordersController.getOrders);
+ordersRoutes.get("/my-sales", verifyUserAuthorization(["seller", "admin"]), ordersController.getSales);
+ordersRoutes.patch("/:id/cancel", ordersController.cancel);
 
-// export { ordersRoutes };
+export { ordersRoutes };

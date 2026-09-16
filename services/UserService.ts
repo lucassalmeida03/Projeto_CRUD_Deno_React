@@ -11,6 +11,8 @@ class UserService {
       throw throwlhos.err_badRequest("E-mail já cadastrado no sistema.");
     }
 
+
+
     const saltRounds = 8;
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
@@ -20,6 +22,13 @@ class UserService {
     });
 
     const newUser = await UserModel.create(userEntity);
+
+    if (newUser.role === "customer") {
+      newUser.set("products", undefined);
+    }
+    
+    await newUser.save();
+    
     return newUser;
   }
 

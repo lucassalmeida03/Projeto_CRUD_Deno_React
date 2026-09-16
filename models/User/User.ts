@@ -21,10 +21,7 @@ export class UserClass implements IUser {
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
   }
-
-  isAdmin(): boolean {
-    return this.role === "admin";
-  }
+  
 }
 
 const UserSchema = new Schema<IUser>({
