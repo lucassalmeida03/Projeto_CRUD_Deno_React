@@ -1,40 +1,36 @@
 import { Request, Response } from "express";
 // import { throwlhos } from "../globals/Throwlhos.ts"
-import is from '@zarco/isness'
+import is from "@zarco/isness";
 import { UserService } from "../services/UserService.ts";
 import requestCheck from "request-check";
 const rc = requestCheck.default();
 
-rc.addRules('name', [
-  { 
-  validator: (value: string) => is.name(value),
-  message: "Digite um nome válido.",
+rc.addRules("name", [
+  {
+    validator: (value: string) => is.name(value),
+    message: "Digite um nome válido.",
   },
   {
-  validator: (value: string) => value.trim().length > 1,
-  message: "O campo de nome deve ter pelo menos 2 caracteres.",
-  }
-])
-
+    validator: (value: string) => value.trim().length > 1,
+    message: "O campo de nome deve ter pelo menos 2 caracteres.",
+  },
+]);
 
 rc.addRule("email", {
-  validator: (email: string) => is.email(email)
-  ,
+  validator: (email: string) => is.email(email),
   message: "O formato do email não é válido!",
 });
 
-
-rc.addRules('password', [
-   { 
- validator: (value: string) => value.trim().length > 5,
-  message: "O campo de senha deve ter pelo menos 6 caracteres.",
+rc.addRules("password", [
+  {
+    validator: (value: string) => value.trim().length > 5,
+    message: "O campo de senha deve ter pelo menos 6 caracteres.",
   },
-   {
-  validator: (value: string) => is.string(value),
-  message: "Formato de senha inválido.",
-  }
-])
-
+  {
+    validator: (value: string) => is.string(value),
+    message: "Formato de senha inválido.",
+  },
+]);
 
 class usersController {
   private userService: UserService;
@@ -43,7 +39,7 @@ class usersController {
     this.userService = new UserService();
   }
 
-   create = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response) => {
     try {
       const { name, email, password, role = "customer" } = req.body;
 
@@ -56,25 +52,74 @@ class usersController {
       if (errors) {
         return res.send_badRequest("Request is wrong!", { errors });
       }
-      const newUser = await this.userService.createUser({name, email, password, role});
+      const newUser = await this.userService.createUser({
+        name,
+        email,
+        password,
+        role,
+      });
 
       return res.send_created("Usuário criado com sucesso!", { data: newUser });
-      
-    } catch (error) {
-      return res.send_badRequest((error as Error).message);
-    }
-  }
-  
-  getAll = async (_req: Request, res: Response) => {
-    try {
-      const users = await this.userService.getAllUsers();
-      
-      return res.send_ok({users})
-
     } catch (error) {
       return res.send_badRequest((error as Error).message);
     }
   };
 
+  getAll = async (req: Request, res: Response) => {
+    try {
+      const users = await this.userService.getAllUsers(req.user.role);
+      return res.send_ok({ users });
+    } catch (error) {
+      return res.send_badRequest((error as Error).message);
+    }
+  };
+
+  updateUser = async (req: Request, res: Response) => {
+    try {
+      const { name, email, password } = req.body;
+
+      const errors = rc.check(
+        { name, isRequiredField: false },
+        { email, isRequiredField: false },
+        { password, isRequiredField: false },
+      );
+
+      if (errors) {
+        return res.send_badRequest("Request is wrong!", { errors });
+      }
+      const { id } = req.params;
+      const { role, _id } = req.user;
+
+      const updateUser = await this.userService.updateUser(
+        id,
+        _id,
+        role,
+        req.body,
+      );
+
+      return res.send_ok("Usuário atualizado com sucesso", { updateUser });
+    } catch (error) {
+      return res.send_badRequest((error as Error).message);
+    }
+  };
+
+  deleteUser = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { role, _id } = req.user;
+
+      await this.userService.deleteUser(
+        id,
+        _id,
+        role,
+      );
+
+      return res.send_ok(
+        `Usuário do id: ${id} foi deletado com sucesso.`,
+      );
+    } catch (error) {
+      return res.send_badRequest((error as Error).message);
+    }
+  };
 }
 export { usersController };

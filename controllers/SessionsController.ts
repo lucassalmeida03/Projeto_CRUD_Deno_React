@@ -35,7 +35,7 @@ class sessionsController {
         return res.send_badRequest("Request is wrong!", { errors });
       }
 
-      const user = await this.userService.getUserByEmailWithPassword(email);
+      const user = await this.userService.getUserByEmail(email);
 
       if (!user) {
         throw throwlhos.err_badRequest("E-mail ou senha inválidos.");
@@ -67,6 +67,8 @@ class sessionsController {
       return res.send_badRequest("Algo deu errado!", {error});
     }
   };
+
+  
 }
 
 export { sessionsController }

@@ -42,7 +42,7 @@ class ProductsController {
         ...req.body,
         user: req.user._id,
       };
-      console.log(productPayload);
+
       const newProduct = await this.productService.createProduct(
         productPayload,
       );

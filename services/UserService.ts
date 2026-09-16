@@ -1,5 +1,6 @@
 import { UserClass, UserModel } from "../models/User/User.ts";
 import { IUser } from "../models/User/IUser.ts";
+import { userRole } from "../models/User/IUser.ts";
 import { throwlhos } from "../globals/Throwlhos.ts";
 import bcrypt from "bcrypt";
 
@@ -22,8 +23,16 @@ class UserService {
     return newUser;
   }
 
-  async getAllUsers() {
-    const users = await UserModel.find();
+  async getAllUsers(userRoleRequest: string) {
+    const isAdmin = userRoleRequest === userRole.ADMIN;
+
+    if (!isAdmin) {
+      throw throwlhos.err_unauthorized(
+        "Você não tem permissão para acessar esse recurso.",
+      );
+    }
+
+    const users = await UserModel.find().populate("products").exec();
 
     if (!users) {
       throw throwlhos.err_badRequest("Nenhum usuário encontrado.");
@@ -32,21 +41,31 @@ class UserService {
     return users;
   }
 
-  async getUserById(id: string): Promise<IUser> {
-    const user = await UserModel.findById(id);
-
-    if (!user) {
-      throw throwlhos.err_badRequest("Usuário não encontrado.");
-    }
-
-    return user;
-  }
-
-  async getUserByEmailWithPassword(email: string) {
+  // Usado para buscar usuário no banco para iniciar sessão
+  async getUserByEmail(email: string) {
     return await UserModel.findOne({ email }).select("+password");
   }
 
-  async updateUser(id: string, updateData: Partial<IUser>): Promise<IUser> {
+  async updateUser(
+    id: string,
+    idRequest: string,
+    roleRequest: string,
+    updateData: Partial<IUser>,
+  ): Promise<IUser> {
+    const isOwner = id === idRequest;
+    const isAdmin = roleRequest === userRole.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+      throw throwlhos.err_unauthorized(
+        "Acesso negado: Você não tem permissão para alterar esse perfil.",
+      );
+    }
+
+    if ("password" in updateData && updateData.password) {
+      const saltRounds = 8;
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       { $set: updateData },
@@ -62,7 +81,20 @@ class UserService {
     return updatedUser;
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(
+    id: string,
+    idRequest: string,
+    roleRequest: string,
+  ): Promise<void> {
+    const isOwner = id === idRequest;
+    const isAdmin = roleRequest === userRole.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+      throw throwlhos.err_unauthorized(
+        "Acesso negado: Você não tem permissão para deletar esse perfil.",
+      );
+    }
+
     const result = await UserModel.findByIdAndDelete(id);
 
     if (!result) {
