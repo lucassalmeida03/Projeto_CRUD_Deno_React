@@ -76,6 +76,24 @@ class ProductsController {
     }
   };
 
+  getMyProducts = async (req: Request, res: Response) => {
+    try {
+    
+      const sellerId = req.user._id;
+
+      if (!sellerId) {
+        return res.send_badRequest("ID do vendedor não fornecido.");
+      }
+
+      const products = await this.productService.findBySellerId(sellerId);
+
+      return res.send_ok("Busca completa!", { data: products });
+    } catch (error) {
+      return res.send_badRequest("Erro ao buscar produtos do vendedor.", { error });
+    }
+  };
+
+
   update = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;

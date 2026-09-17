@@ -23,6 +23,12 @@ class ProductService {
     return await ProductModel.find().populate("user", "name email role");
   }
 
+  async findBySellerId(sellerId: string): Promise<IProduct[]> {
+    return await ProductModel.find({ user: sellerId })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+  }
+
   async getProductById(id: string): Promise<IProduct> {
     if (!isValidObjectId(id)) {
       throw throwlhos.err_badRequest("ID do produto inválido.");

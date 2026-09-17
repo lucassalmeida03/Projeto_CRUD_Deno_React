@@ -22,9 +22,6 @@ export class ProductClass implements IProduct {
     this.updatedAt = product.updatedAt;
   }
 
-  hasAvailableStock(quantity: number): boolean {
-    return this.stock >= quantity;
-  }
 }
 
 const ProductSchema = new Schema<IProduct>(

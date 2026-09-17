@@ -19,7 +19,7 @@ export class OrderService {
 
     try {
       const product = await ProductModel.findById(productId).session(session);
-    
+
       if (!product) {
         throw throwlhos.err_badRequest("Produto não encontrado no sistema.");
       }
@@ -138,9 +138,17 @@ export class OrderService {
       throw throwlhos.err_badRequest("Este pedido já está pago.");
     }
 
+    if (!order.seller._id) {
+      throw throwlhos.err_badRequest("Id do dono da venda inexistente.");
+    }
+
+    const ownerId = typeof order.seller === "object" && "_id" in order.seller
+      ? order.seller._id.toString()
+      : order.seller.toString();
+
     const isSeller = userRoleRequest === userRole.SELLER;
     const isAdmin = userRoleRequest === userRole.ADMIN;
-    const isOwner = userId === order.seller._id;
+    const isOwner = ownerId === userId;
 
     if (!isSeller && !isAdmin) {
       throw throwlhos.err_unauthorized(
@@ -156,5 +164,44 @@ export class OrderService {
 
     order.status = "paid";
     return await order.save();
+  }
+
+  async deleteOrder(orderId: string, userId: string, userRoleRequest: string) {
+    const order = await OrderModel.findById(orderId);
+
+    if (!order) {
+      throw throwlhos.err_notFound("Pedido não encontrado.");
+    }
+
+    const isCustomer = String(order.customer._id) === userId;
+    const isAdmin = userRoleRequest === userRole.ADMIN;
+
+    if (!isCustomer && !isAdmin) {
+      throw throwlhos.err_forbidden(
+        "Você não tem permissão para deletar este pedido.",
+      );
+    }
+
+     if (!order.customer._id) {
+      throw throwlhos.err_badRequest("Id do cliente da venda inexistente.");
+    }
+
+      const ownerId = typeof order.customer === "object" && "_id" in order.customer
+      ? order.customer._id.toString()
+      : order.customer.toString();
+
+      const isOwner = ownerId === userId
+
+      if(!isOwner) {
+        throw throwlhos.err_forbidden("Você não tem permissão para excluir esse pedido.");
+      }
+
+    if (order.status !== "canceled") {
+      throw throwlhos.err_badRequest(
+        `Não é possível deletar um pedido com status '${order.status}'. Cancele o pedido antes de excluí-lo.`,
+      );
+    }
+
+    await OrderModel.findByIdAndDelete(orderId);
   }
 }

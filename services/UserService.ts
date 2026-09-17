@@ -24,9 +24,9 @@ class UserService {
     if (newUser.role === "customer") {
       newUser.set("products", undefined);
     }
-    
+
     await newUser.save();
-    
+
     return newUser;
   }
 
@@ -50,7 +50,7 @@ class UserService {
 
   // Usado para buscar usuário no banco para iniciar sessão
   async getUserByEmail(email: string) {
-    return await UserModel.findOne({ email }).select("+password");
+    return await UserModel.findOne({ email }).select("+password name email role");
   }
 
   async updateUser(

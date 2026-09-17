@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { OrderService } from "../services/OrderService.ts";
 
-
 class OrdersController {
   private orderService: OrderService;
 
@@ -39,7 +38,6 @@ class OrdersController {
     }
   };
 
-
   getSales = async (req: Request, res: Response) => {
     try {
       const sellerId = req.user._id;
@@ -53,36 +51,49 @@ class OrdersController {
 
   cancel = async (req: Request, res: Response) => {
     try {
-      
       const { id } = req.params;
       const userId = req.user._id;
 
-      const canceledOrder = await this.orderService.cancelOrder(id, userId)
+      const canceledOrder = await this.orderService.cancelOrder(id, userId);
 
-      return res.send_ok("Pedido cancelado e estoque devolvido com sucesso!", { data: canceledOrder }
-      );
-
+      return res.send_ok("Pedido cancelado e estoque devolvido com sucesso!", {
+        data: canceledOrder,
+      });
     } catch (error) {
-  
-      return res.send_badRequest("Erro ao cancelar o pedido.", error)
+      return res.send_badRequest("Erro ao cancelar o pedido.", error);
     }
   };
 
   markAsPaid = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const {_id , role } = req.user
+      const { _id, role } = req.user;
       const updatedOrder = await this.orderService.markAsPaid(id, role, _id);
 
-      return res.send_ok("Pagamento do pedido atualizado com sucesso!", { data: updatedOrder });
-
+      return res.send_ok("Pagamento do pedido atualizado com sucesso!", {
+        data: updatedOrder,
+      });
     } catch (error) {
-      return res.send_badRequest("Erro ao atualizar pagamento do pedido.", error);
+      return res.send_badRequest(
+        "Erro ao atualizar pagamento do pedido.",
+        error,
+      );
     }
   };
 
+  delete = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user._id;
+      const userRole = req.user.role;
+
+      await this.orderService.deleteOrder(id, userId, userRole);
+
+      return res.send_ok("Pedido cancelado foi removido com sucesso!");
+    } catch (error) {
+      return res.send_badRequest("Erro ao excluir pedido.", error);
+    }
+  };
 }
-
-
 
 export { OrdersController };
