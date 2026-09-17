@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-// import { throwlhos } from "../globals/Throwlhos.ts"
 import is from "@zarco/isness";
 import { UserService } from "../services/UserService.ts";
 import requestCheck from "request-check";
@@ -59,9 +58,9 @@ class usersController {
         role,
       });
 
-      return res.send_created("Usuário criado com sucesso!", { data: newUser });
+      return res.send_created("Usuário criado com sucesso!", {newUser} );
     } catch (error) {
-      return res.send_badRequest((error as Error).message);
+      return res.send_badRequest("Erro ao criar usuário", error);
     }
   };
 
