@@ -54,10 +54,10 @@ class OrdersController {
   cancel = async (req: Request, res: Response) => {
     try {
       
-      const { orderId } = req.params._id;
+      const { id } = req.params;
       const userId = req.user._id;
 
-      const canceledOrder = await this.orderService.cancelOrder(orderId, userId)
+      const canceledOrder = await this.orderService.cancelOrder(id, userId)
 
       return res.send_ok("Pedido cancelado e estoque devolvido com sucesso!", { data: canceledOrder }
       );
@@ -65,6 +65,19 @@ class OrdersController {
     } catch (error) {
   
       return res.send_badRequest("Erro ao cancelar o pedido.", error)
+    }
+  };
+
+  markAsPaid = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const {_id , role } = req.user
+      const updatedOrder = await this.orderService.markAsPaid(id, role, _id);
+
+      return res.send_ok("Pagamento do pedido atualizado com sucesso!", { data: updatedOrder });
+
+    } catch (error) {
+      return res.send_badRequest("Erro ao atualizar pagamento do pedido.", error);
     }
   };
 

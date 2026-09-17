@@ -36,7 +36,7 @@ class sessionsController {
       }
 
       const user = await this.userService.getUserByEmail(email);
-
+      
       if (!user) {
         throw throwlhos.err_badRequest("E-mail ou senha inválidos.");
       }

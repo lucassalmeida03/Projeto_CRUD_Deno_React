@@ -11,8 +11,6 @@ class UserService {
       throw throwlhos.err_badRequest("E-mail já cadastrado no sistema.");
     }
 
-
-
     const saltRounds = 8;
     const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
