@@ -49,7 +49,7 @@ class usersController {
       );
 
       if (errors) {
-        return res.send_badRequest("Request is wrong!", { errors });
+        return res.send_badRequest("Erro de validação", { errors });
       }
       const newUser = await this.userService.createUser({
         name,
@@ -84,7 +84,7 @@ class usersController {
       );
 
       if (errors) {
-        return res.send_badRequest("Request is wrong!", { errors });
+        return res.send_badRequest("Erro de validação!", { errors });
       }
       const { id } = req.params;
       const { role, _id } = req.user;
@@ -98,7 +98,7 @@ class usersController {
 
       return res.send_ok("Usuário atualizado com sucesso", { updateUser });
     } catch (error) {
-      return res.send_badRequest((error as Error).message);
+      return res.send_badRequest("Não foi possível fazer alterações", error);
     }
   };
 
@@ -117,7 +117,7 @@ class usersController {
         `Usuário do id: ${id} foi deletado com sucesso.`,
       );
     } catch (error) {
-      return res.send_badRequest((error as Error).message);
+      return res.send_badRequest("Não foi possível concluir a operação.", error);
     }
   };
 }

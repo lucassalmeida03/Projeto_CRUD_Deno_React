@@ -32,7 +32,7 @@ class ProductsController {
     try {
       const errors = rc.check(req.body);
       if (errors) {
-        return res.send_badRequest("Request is wrong!", { errors });
+        return res.send_badRequest("Erro de validação!", { errors });
       }
 
       if (!req.user._id) {
@@ -92,7 +92,6 @@ class ProductsController {
       return res.send_badRequest("Erro ao buscar produtos do vendedor.", { error });
     }
   };
-
 
   update = async (req: Request, res: Response) => {
     try {

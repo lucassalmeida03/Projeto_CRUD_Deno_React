@@ -16,7 +16,6 @@ class ProductService {
     });
     
     return newProduct
-    
   }
 
   async getAllProducts(): Promise<IProduct[]> {

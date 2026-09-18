@@ -7,6 +7,11 @@
 
 /node_modules
 
+.coverage/
+coverage/
+html_coverage/
+*.lcov
+
 .env
 *.orig
 *.pyc
