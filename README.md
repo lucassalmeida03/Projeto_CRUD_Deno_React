@@ -1,70 +1,76 @@
-Projeto Deno CRUD - (API simples baseada em sistemas E-Commerce)
-API RESTful desenvolvida com Express, Deno, TypeScript, Mongoose e JWT.
+# Projeto Deno CRUD - (API simples baseada em sistemas E-Commerce - Somente algumas funcionalidades.)
 
-🚀 Tecnologias e Pacotes
+API RESTful desenvolvida com TypeScript, Deno, Express e MongoDB.
 
-Deno - Runtime moderno para TypeScript/JavaScript.
+---
 
-express - Framework web para roteamento e middlewares.
+## 🚀 Tecnologias e Pacotes
 
-mongoose - ODM para modelagem de dados do MongoDB.
+* **Deno** — Runtime moderno para TypeScript e JavaScript
+* **express** — Framework web para gerenciamento de rotas e middlewares
+* **mongoose** — ODM para modelagem e manipulação de dados no MongoDB
+* **bcrypt** — Algoritmo de hashing seguro para criptografia de senhas
+* **jsonwebtoken** — Autenticação e autorização via Tokens JWT
+* **request-check** — Validação de schemas e payloads de requisição
+* **responser** — Padronização de respostas HTTP (`send_created`, `send_badRequest`, etc.)
+* **throwlhos** — Tratamento centralizado e disparo de erros customizados
+* **morgan** — Logger HTTP para exibição de logs de requisições no console
+* **@zarco/isness** — Utilitário para comparação e validação de tipos de dados
+* **@std/assert** — Módulo padrão do Deno para asserções e suíte de testes (`assertEquals`, `assertExists`)
 
-bcrypt - Criptografia de senhas por hash.
+---
 
-jsonwebtoken - Autenticação e autorização via JWT.
+## 🛠️ Instalação e Execução
 
-request-check - Validação de payloads de requisição.
+### Pré-requisitos
+* **Deno** (v1.38+ ou v2.x) instalado na máquina.
+* Instância do **MongoDB** rodando localmente ou conexão ativa com MongoDB Atlas.
 
-responser - Padronização de respostas HTTP
+---
 
-throwlhos - Tratamento e disparo de erros customizados.
+### Configuração Passo a Passo
 
-morgan - Logger HTTP para requisições no console.
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/lucassalmeida03/deno_api.git](https://github.com/lucassalmeida03/deno_api.git)
+   cd deno_api
 
-@zarco/isness - Comparação de valores.
+2. *Crie o arquivo .env na raiz*
+   preencha as variáveis de ambiente de acordo com o arquivo .env_example.
 
-@std/assert - Módulo padrão do Deno para asserções e testes (assertEquals, assertExists).
+3. *Inicie a aplicação:*
+   deno task dev
 
-🛠️ Instalação e Execução
-Pré-requisitos
-Deno (v1.38+ ou v2.x) instalado na máquina.
+---
 
-MongoDB rodando localmente ou conexão ativa com MongoDB Atlas.
+### 🧪 Instruções para Rodar os Testes
 
-Configuração:
+  A suíte de testes utiliza o test runner nativo do Deno em conjunto com a biblioteca @std/assert.
 
-Clone o repositório:
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+  *Rodar todos os testes:*
+  deno task test
 
-Crie o arquivo .env na raiz:
-preencha as variáveis de ambiente de acordo com o arquivo .env_example.
+---
 
-Inicie a aplicação:
-deno task dev
+### 📌 Documentação dos Endpoints
 
+**🔒 Rotas Privadas: Exigem o envio do cabeçalho Authorization: Bearer <seu_token_jwt>.**
 
-🧪 Instruções para Rodar os Testes
-A suíte de testes utiliza o test runner nativo do Deno em conjunto com a biblioteca @std/assert.
+*🔑 Autenticação & Sessões (/sessions)*
 
-Rodar todos os testes:
-deno task test
-
-
-📌 Documentação dos Endpoints
-🔒 Rotas Privadas: Exigem o envio do cabeçalho Authorization: Bearer <seu_token_jwt>.
-
-🔑 Autenticação & Sessões (/sessions)
-POST /sessions (Público)
+- `POST /sessions (Público)`
 Descrição: Autentica o usuário e gera o token JWT.
 
+``` json
 Exemplo de Request:
 JSON
 {
   "email": "maria@email.com",
   "password": "senhaSegura123"
 }
+```
 
+``` json
 Exemplo de Response (200 OK):
 JSON
 {
@@ -80,12 +86,14 @@ JSON
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
+```
 
-👤 Usuários (/users)
+*👤 Usuários (/users)*
 
-POST /users (Público - Qualquer perfil)
+- `POST /users (Público - Qualquer perfil)`
 Descrição: Cadastro de novos usuários no sistema.
 
+``` json
 Exemplo de Request:
 JSON
 {
@@ -94,7 +102,9 @@ JSON
   "password": "senhaSegura123",
   "role": "customer"
 }
+```
 
+``` json
 Exemplo de Response (201 Created):
 JSON
 {
@@ -111,35 +121,32 @@ JSON
           }
        }
  }
+ ```
 
-
-GET /users (Privado - Apenas admin)
+- `GET /users (Privado - Apenas admin)`
 Descrição: Lista todos os usuários cadastrados na base.
 
-PUT /users/:id (Privado - Usuário Autenticado)
+- `PUT /users/:id (Privado - Usuário Autenticado)`
 Descrição: Atualiza as informações do próprio perfil do usuário.
 
-DELETE /users/:id (Privado - Usuário Autenticado)
+- `DELETE /users/:id (Privado - Usuário Autenticado)`
 Descrição: Remove a conta do usuário.
 
+*📦 Produtos (/products)*
 
-📦 Produtos (/products)
-
-GET /products (Privado - Permissões: customer, admin)
+- `GET /products (Privado - Permissões: customer, admin)`
 Descrição: Lista a vitrine geral de produtos disponíveis.
 
-
-GET /products/my-products (Privado - Permissão: seller)
+- `GET /products/my-products (Privado - Permissão: seller)`
 Descrição: Lista apenas os produtos cadastrados pelo vendedor logado.
 
-
-GET /products/:id (Privado - Qualquer Usuário Autenticado)
+- `GET /products/:id (Privado - Qualquer Usuário Autenticado)`
 Descrição: Retorna os detalhes de um produto específico através do ID.
 
-
-POST /products (Privado - Permissões: seller, admin)
+- `POST /products (Privado - Permissões: seller, admin)`
 Descrição: Cadastra um novo produto na loja.
 
+ ``` json
 Exemplo de Request:
 JSON
 {
@@ -147,8 +154,9 @@ JSON
   "price": 299.90,
   "stock": 10
 }
+ ```
 
-
+ ``` json
 Exemplo de Response(201 Created):
 JSON
 "message": "Produto cadastrado com sucesso!",
@@ -161,29 +169,30 @@ JSON
             "createdAt": "2026-09-18T18:36:02.926Z",
             "updatedAt": "2026-09-18T18:36:02.926Z",
     }
+  ```
 
-
-PUT /products/:id (Privado - Permissões: seller, admin)
+- `PUT /products/:id (Privado - Permissões: seller, admin)`
 Descrição: Atualiza as informações de um produto existente.
 
-
-DELETE /products/:id (Privado - Permissões: seller, admin)
+- `DELETE /products/:id (Privado - Permissões: seller, admin)`
 Descrição: Remove um produto do catálogo.
 
 
-🛍️ Pedidos (/orders)
+*🛍️ Pedidos (/orders)*
 
-POST /orders (Privado - Permissões: customer, admin)
+- `POST /orders (Privado - Permissões: customer, admin)`
 Descrição: Realiza a compra de um produto.
 
+ ``` json
 Exemplo de Request:
 JSON
 {
   "productId": "66f4b8f2c3a21a0012345678",
   "quantity": 10
 }
+ ```
 
-
+ ``` json
 Exemplo de Response (201 Created):
 JSON
 {
@@ -210,28 +219,19 @@ JSON
   }
  }
 }
+ ```
 
-
-GET /orders/my-orders (Privado - Permissões: customer, admin)
+- `GET /orders/my-orders (Privado - Permissões: customer, admin)`
 Descrição: Lista o histórico de compras do cliente logado.
 
-
-GET /orders/my-sales (Privado - Permissões: seller, admin)
+- `GET /orders/my-sales (Privado - Permissões: seller, admin)`
 Descrição: Lista os pedidos de vendas recebidos pelo vendedor logado.
 
-
-PATCH /orders/:id/cancel (Privado - Permissões: customer, admin)
+- `PATCH /orders/:id/cancel (Privado - Permissões: customer, admin)`
 Descrição: Cancela o pedido indicado no parâmetro ID.
 
-
-PATCH /orders/:id/pay (Privado - Permissões: seller, admin)
+- `PATCH /orders/:id/pay (Privado - Permissões: seller, admin)`
 Descrição: Altera o status do pedido para pago.
 
-
-DELETE /orders/:id/delete (Privado - Permissões: customer, admin)
+- `DELETE /orders/:id/delete (Privado - Permissões: customer, admin)`
 Descrição: Remove o registro de um pedido da base de dados.
-
-
-
-
-
