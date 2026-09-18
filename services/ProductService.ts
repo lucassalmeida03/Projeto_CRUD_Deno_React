@@ -8,7 +8,7 @@ import { UserModel } from "../models/User/User.ts";
 class ProductService {
   async createProduct(productData: IProduct): Promise<IProduct> {
     const productEntity = new ProductClass(productData);
-
+    
     const newProduct = await ProductModel.create(productEntity);
 
     await UserModel.findByIdAndUpdate(productData.user, {

@@ -38,6 +38,7 @@ class ProductsController {
       if (!req.user._id) {
         throw throwlhos.err_forbidden("Não autorizado.");
       }
+
       const productPayload = {
         ...req.body,
         user: req.user._id,
@@ -99,7 +100,7 @@ class ProductsController {
       const errors = rc.check(req.body);
 
       if (errors) {
-        return res.send_badRequest("Request is wrong!", { errors });
+        return res.send_badRequest("Erro de validação!", { errors });
       }
 
       const { _id, role } = req.user;
@@ -111,11 +112,7 @@ class ProductsController {
         role,
       );
 
-      return res.send_ok({
-        success: true,
-        message: "Produto atualizado com sucesso!",
-        data: updatedProduct,
-      });
+      return res.send_ok("Produto atualizado com sucesso!", { updatedProduct } );
     } catch (error) {
       return res.send_badRequest("Erro ao atualizar produto.", { error });
     }
