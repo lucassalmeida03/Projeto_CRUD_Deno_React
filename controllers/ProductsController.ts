@@ -59,7 +59,7 @@ class ProductsController {
   getAll = async (_req: Request, res: Response) => {
     try {
       const products = await this.productService.getAllProducts();
-      return res.send_ok({ success: true, data: products });
+      return res.send_ok("Lista de produtos completa:", { products });
     } catch (error) {
       return res.send_badRequest("Erro ao listar produtos.", { error });
     }
@@ -71,7 +71,7 @@ class ProductsController {
 
       const product = await this.productService.getProductById(id);
 
-      return res.send_ok({ success: true, data: product });
+      return res.send_ok(`Produto com ${id} buscado com sucesso.`, { product });
     } catch (error) {
       return res.send_badRequest("Produto não encontrado.", { error });
     }
@@ -88,7 +88,7 @@ class ProductsController {
 
       const products = await this.productService.findBySellerId(sellerId);
 
-      return res.send_ok("Busca completa!", { data: products });
+      return res.send_ok("Busca completa!", { products });
     } catch (error) {
       return res.send_badRequest("Erro ao buscar produtos do vendedor.", { error });
     }

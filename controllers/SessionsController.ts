@@ -32,7 +32,7 @@ class sessionsController {
 
       const errors = rc.check({email}, {password});
       if (errors) {
-        return res.send_badRequest("Request is wrong!", { errors });
+        return res.send_badRequest("Erro de validação!", { errors });
       }
 
       const user = await this.userService.getUserByEmail(email);

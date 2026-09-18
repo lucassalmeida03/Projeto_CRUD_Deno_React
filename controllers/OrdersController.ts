@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { OrderService } from "../services/OrderService.ts";
+import { throwlhos } from "../globals/Throwlhos.ts";
 
 class OrdersController {
   private orderService: OrderService;
@@ -30,6 +31,11 @@ class OrdersController {
   getOrders = async (req: Request, res: Response) => {
     try {
       const customerId = req.user._id;
+
+      if(!req.user._id) {
+        throw throwlhos.err_badRequest("User sem ID especificado.")
+      }
+      
       const orders = await this.orderService.getOrders(customerId);
 
       return res.send_ok("Operação concluída", { data: orders });
@@ -41,9 +47,13 @@ class OrdersController {
   getSales = async (req: Request, res: Response) => {
     try {
       const sellerId = req.user._id;
+
+      if(!req.user._id) {
+        throw throwlhos.err_badRequest("User sem ID especificado.")
+      }
       const sales = await this.orderService.getSales(sellerId);
 
-      return res.send_ok("Operação concluída", { data: sales });
+      return res.send_ok("Operação concluída", { sales });
     } catch (error) {
       return res.send_badRequest("Erro ao buscar histórico de vendas.", error);
     }

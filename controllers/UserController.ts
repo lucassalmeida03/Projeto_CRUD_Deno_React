@@ -67,9 +67,9 @@ class usersController {
   getAll = async (req: Request, res: Response) => {
     try {
       const users = await this.userService.getAllUsers(req.user.role);
-      return res.send_ok({ users });
+      return res.send_ok("Usuarios encontrados:", { users });
     } catch (error) {
-      return res.send_badRequest((error as Error).message);
+      return res.send_badRequest("Não foi possível buscar todos os usuários", { error });
     }
   };
 
