@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "dev": "deno run --watch --allow-net --allow-env --env --allow-read --allow-sys --allow-ffi server.ts",
+    "test": "deno test --coverage --allow-net --allow-env --env --allow-read --allow-sys --allow-ffi",
+    "test-coverage-detailed": "deno coverage --detailed coverage/"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@zarco/isness": "jsr:@zarco/isness@^0.1.18",
+    "bcrypt": "npm:bcrypt@^6.0.0",
+    "express": "npm:express@^5.2.1",
+    "jsonwebtoken": "npm:jsonwebtoken@^9.0.3",
+    "mongodb": "npm:mongodb@^7.6.0",
+    "mongoose": "npm:mongoose@^9.9.5",
+    "morgan": "npm:morgan@^1.12.1",
+    "request-check": "npm:request-check@^1.6.2",
+    "responser": "npm:responser@2.0.2",
+    "throwlhos": "npm:throwlhos@^1.1.0"
+  },
+  "nodeModulesDir": "auto"
+}
