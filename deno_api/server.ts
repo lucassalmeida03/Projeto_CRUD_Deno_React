@@ -2,12 +2,14 @@ import express from 'express';
 import responser from 'responser'
 import morgan from 'morgan'
 import { routes } from "./routes/index.ts"
+import cors from "cors"
 import { connectDB } from "./config/ConnectDB.ts"
 import { Request, Response, NextFunction } from "express";
 const app = express()
 const PORT = Deno.env.get("PORT") || 3000;
 const morganConfig = morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms')
  
+app.use(cors())
 app.use(express.json())
 app.use(morganConfig)
 app.use(responser.default)
