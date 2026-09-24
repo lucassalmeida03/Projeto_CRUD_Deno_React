@@ -1,11 +1,8 @@
 import { Header } from '../components/Header';
 import { Button } from '../components/Button'; 
-import type { UserRole } from '../types/UserRole';
+import { useAuth } from '../hooks/useAuth';
 import type { Product } from '../types/Product';
 
-interface CatalogProps {
-  userRole: UserRole;
-}
 
 const mockProducts: Product[] = Array.from({ length: 8 }).map((_, index) => ({
   title: 'Jaqueta Térmica...',
@@ -14,11 +11,19 @@ const mockProducts: Product[] = Array.from({ length: 8 }).map((_, index) => ({
   price: '1.420,00',
 }));
 
-export function Catalog({userRole}: CatalogProps) {
+export function Catalog() {
+  const { user } = useAuth();
+  
+  if(!user) {
+    return null
+  }
+
+  const userRole = user.role
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans flex flex-col">
       
-      <Header userRole="admin"/>
+      <Header userRole={user.role}/>
+
      { userRole !== "seller" && (
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
         <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">
