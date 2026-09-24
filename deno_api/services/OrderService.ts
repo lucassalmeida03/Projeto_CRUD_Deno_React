@@ -62,7 +62,7 @@ export class OrderService {
 
   async getOrders(customerId: string): Promise<IOrder[]> {
     return await OrderModel.find({ customer: customerId })
-      .populate("product", "title price image")
+      .populate("product", "title price")
       .populate("seller", "name email")
       .sort({ createdAt: -1 });
   }
@@ -163,7 +163,13 @@ export class OrderService {
     }
 
     order.status = "paid";
-    return await order.save();
+    const updatedOrder = await order.save();
+
+    return await updatedOrder.populate([
+      { path: "product", select: "title price" },
+      { path: "customer", select: "name email" },
+      { path: "seller", select: "name email" },
+    ]);
   }
 
   async deleteOrder(orderId: string, userId: string, userRoleRequest: string) {
@@ -173,7 +179,14 @@ export class OrderService {
       throw throwlhos.err_notFound("Pedido não encontrado.");
     }
 
-    const isCustomer = String(order.customer._id) === userId;
+    if (!order.customer._id) {
+      throw throwlhos.err_badRequest("Id do cliente da venda inexistente.");
+    }
+
+    const customerId = typeof order.customer === "object" && "_id" in order.customer
+      ? order.customer._id.toString()
+      : order.customer.toString();
+    const isCustomer = customerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;
 
     if (!isCustomer && !isAdmin) {
@@ -182,19 +195,9 @@ export class OrderService {
       );
     }
 
-     if (!order.customer._id) {
-      throw throwlhos.err_badRequest("Id do cliente da venda inexistente.");
+    if (!isCustomer && !isAdmin) {
+      throw throwlhos.err_forbidden("Você não tem permissão para excluir esse pedido.");
     }
-
-      const ownerId = typeof order.customer === "object" && "_id" in order.customer
-      ? order.customer._id.toString()
-      : order.customer.toString();
-
-      const isOwner = ownerId === userId
-
-      if(!isOwner) {
-        throw throwlhos.err_forbidden("Você não tem permissão para excluir esse pedido.");
-      }
 
     if (order.status !== "canceled") {
       throw throwlhos.err_badRequest(

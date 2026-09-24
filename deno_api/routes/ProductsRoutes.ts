@@ -12,7 +12,7 @@ productsRoutes.delete("/:id", verifyUserAuthorization(["seller", "admin"]), prod
 
 
 productsRoutes.get("/", verifyUserAuthorization(["admin", "customer"]), productsController.getAll)
-productsRoutes.get("/my-products", verifyUserAuthorization(["seller"]), productsController.getMyProducts)
+productsRoutes.get("/my-products", verifyUserAuthorization(["seller", "admin"]), productsController.getMyProducts)
 productsRoutes.get("/:id", productsController.getById);
 
 
