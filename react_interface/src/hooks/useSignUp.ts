@@ -13,7 +13,7 @@ export function useSignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
- async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage('');
 
@@ -25,7 +25,9 @@ export function useSignUp() {
     });
 
     if (!result.success) {
-      setErrorMessage(result.error.issues[0]?.message ?? 'Verifique os dados informados.');
+      setErrorMessage(
+        result.error.issues[0]?.message ?? 'Verifique os dados informados.'
+      );
       return;
     }
 
@@ -35,7 +37,9 @@ export function useSignUp() {
       await createUser(result.data);
       navigate('/signIn');
     } catch {
-      setErrorMessage('Não foi possível criar a conta. Verifique os dados e tente novamente.');
+      setErrorMessage(
+        'Não foi possível criar a conta. Verifique os dados e tente novamente.'
+      );
     } finally {
       setIsLoading(false);
     }

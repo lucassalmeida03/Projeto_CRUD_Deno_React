@@ -1,6 +1,6 @@
-import { useAuth } from "../hooks/useAuth";
-import type { UserRole } from "../types/UserRole";
-import  { Navigate } from "react-router-dom";
+import { useAuth } from '../hooks/useAuth';
+import type { UserRole } from '../types/UserRole';
+import { Navigate } from 'react-router-dom';
 
 export function RoleRoute({
   allowedRoles,

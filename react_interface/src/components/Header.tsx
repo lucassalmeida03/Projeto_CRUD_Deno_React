@@ -1,40 +1,37 @@
-import { useState } from "react";
-import type { UserRole } from "../types/UserRole";
-import { Button } from "./Button";
-import { useAuth } from "../hooks/useAuth";
+import { useState } from 'react';
+import { Button } from './Button';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
-interface HeaderProps {
-  userRole: UserRole;
-  userName?: string;
-  userEmail?: string;
-  avatarUrl?: string;
-}
-
-
-export function Header({
-  userRole,
-  userName = "Alexandre Silva",
-  userEmail = "dev@commerceapi.io",
-  avatarUrl = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-}: HeaderProps) {
-  const [activeItem, setActiveItem] = useState("Pedidos & Compras");
-  const { logout } = useAuth()
-  const canViewVitrine = userRole === "admin" || userRole === "customer";
-  const canViewMeusProdutos = userRole === "admin" || userRole === "seller";
-  const canViewUsuarios = userRole === "admin";
+export function Header() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const userRole = user?.role;
+  const [activeItem, setActiveItem] = useState('Vitrine / Catálogo');
+  const { logout } = useAuth();
+  const canViewVitrine = userRole === 'admin' || userRole === 'customer';
+  const canViewMeusProdutos = userRole === 'admin' || userRole === 'seller';
+  const canViewUsuarios = userRole === 'admin';
 
   return (
     <header className="w-full bg-white border-b border-gray-200 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <nav className="flex items-center space-x-2 md:space-x-4">
           <button
-            type="button"
-            onClick={() => setActiveItem("Pedidos & Compras")}
-            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              activeItem === "Pedidos & Compras"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-            }`}
+            onClick={() => {
+              setActiveItem('Pedidos & Compras');
+              if (userRole === 'customer') {
+                navigate('/ordersCustomer');
+              } else {
+                navigate('/orders');
+              }
+            }}
+            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl
+                 text-sm font-medium transition-all ${
+                   activeItem === 'Pedidos & Compras'
+                     ? 'bg-indigo-600 text-white shadow-sm'
+                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                 }`}
           >
             Pedidos & Compras
           </button>
@@ -42,13 +39,15 @@ export function Header({
           {canViewVitrine && (
             <button
               type="button"
-              onClick={() => setActiveItem("Vitrine / Catálogo")}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl
-                 text-sm font-medium transition-all ${
-                   activeItem === "Vitrine / Catálogo"
-                     ? "bg-indigo-600 text-white shadow-sm"
-                     : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                 }`}
+              onClick={() => {
+                setActiveItem('Vitrine / Catálogo');
+                navigate('/catalog');
+              }}
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                activeItem === 'Vitrine / Catálogo'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+              }`}
             >
               Vitrine / Catálogo
             </button>
@@ -57,12 +56,15 @@ export function Header({
           {canViewMeusProdutos && (
             <button
               type="button"
-              onClick={() => setActiveItem("Meus Produtos")}
+              onClick={() => {
+                setActiveItem('Meus Produtos');
+                navigate('/myProducts');
+              }}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm 
                 font-medium transition-all ${
-                  activeItem === "Meus Produtos"
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  activeItem === 'Meus Produtos'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >
               Meus Produtos
@@ -72,12 +74,16 @@ export function Header({
           {canViewUsuarios && (
             <button
               type="button"
-              onClick={() => setActiveItem("Usuários & Perfis")}
+              onClick={() => {
+                setActiveItem('Usuários & Perfis');
+                navigate('/directory');
+              }}
+
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm 
                 font-medium transition-all ${
-                  activeItem === "Usuários & Perfis"
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                  activeItem === 'Usuários & Perfis'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >
               Usuários & Perfis
@@ -88,18 +94,24 @@ export function Header({
         <div className="flex items-center space-x-3">
           <div className="flex flex-col text-right">
             <span className="text-sm font-bold text-gray-900 leading-tight">
-              {userName}
+              {user?.name}
             </span>
             <span className="text-xs font-semibold text-indigo-600">
-              {userEmail}
+              {user?.email}
             </span>
           </div>
-          <img
-            src={avatarUrl}
-            alt={userName}
-            className="w-10 h-10 rounded-full object-cover border border-gray-200"
-          />
-          <Button className="w-20 h-10" onClick={() =>{confirm("deseja sair"), logout()}}>Sair</Button>
+
+          <Button
+            className="w-20 h-10 ml-4"
+            onClick={() => {
+              const valid = confirm('deseja sair');
+              if (valid) {
+                logout();
+              }
+            }}
+          >
+            Sair
+          </Button>
         </div>
       </div>
     </header>

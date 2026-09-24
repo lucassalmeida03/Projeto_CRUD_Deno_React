@@ -1,6 +1,6 @@
-type Props = React.ComponentProps<"input"> & {
-  legend?: string
-}
+type Props = React.ComponentProps<'input'> & {
+  legend?: string;
+};
 
 export function Input({ legend, ...rest }: Props) {
   return (
@@ -19,5 +19,5 @@ export function Input({ legend, ...rest }: Props) {
         {...rest}
       />
     </fieldset>
-  )
+  );
 }

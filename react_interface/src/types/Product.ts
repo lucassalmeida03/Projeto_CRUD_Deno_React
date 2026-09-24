@@ -1,14 +1,15 @@
 export interface Product {
   id?: string;
+  _id?: string;
   title: string;
-  description: string;
+  description?: string;
   stock: number;
-  price: string;
+  price: number;
 }
 
 export interface CreateProduct {
   title: string;
   description?: string;
   stock: number;
-  price: string;
+  price: number;
 }
