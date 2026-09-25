@@ -2,6 +2,7 @@ import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { useOrders } from '../hooks/useOrders';
 import type { Order } from '../types/Order';
+import { formatCurrency } from '../utils/formatCurrency';
 
 function getOrderId(order: Order) {
   return order._id ?? '';
@@ -19,13 +20,6 @@ function getProductTitle(product: Order['product']) {
   return product && typeof product === 'object'
     ? product.title
     : 'Produto removido';
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 export function OrdersManagement() {

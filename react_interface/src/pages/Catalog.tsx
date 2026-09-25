@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { Header } from '../components/Header';
 import { useAuth } from '../hooks/useAuth';
-import { useOrders } from '../hooks/useOrders';
 import { getProducts } from '../services/productService';
 import { createOrderSchema } from '../schemas/orderSchema';
 import type { Product } from '../types/Product';
+import { formatCurrency } from '../utils/formatCurrency';
+import { useCreateOrder } from '../hooks/useCreateOrder';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -36,11 +37,6 @@ export function CreateOrderModal({
 
   if (!isOpen) return null;
 
-  const formatCurrency = (value: number) =>
-    value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
 
   const handleConfirm = () => {
     const result = createOrderSchema.safeParse({
@@ -156,7 +152,7 @@ export function Catalog() {
     isCreating,
     errorMessage: orderErrorMessage,
     saveOrder,
-  } = useOrders();
+  } = useCreateOrder();
 
   useEffect(() => {
     async function loadProducts() {
@@ -244,9 +240,8 @@ export function Catalog() {
                   <div className="flex items-baseline text-gray-900 font-extrabold">
                     <span className="text-xs mr-1">R$</span>
                     <span className="text-base">
-                      {product.price.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(product.price)
+                      }
                     </span>
                   </div>
                 </div>

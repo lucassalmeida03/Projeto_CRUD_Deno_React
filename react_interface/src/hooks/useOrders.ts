@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  createOrder,
   getSales,
   markOrderAsPaid,
 } from '../services/orderService';
-import type { CreateOrderData, Order } from '../types/Order';
+import type { Order } from '../types/Order';
 
 interface OrderError {
   response?: { data?: { message?: string } };
@@ -13,7 +12,6 @@ interface OrderError {
 export function useOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -33,23 +31,6 @@ export function useOrders() {
 
     void loadSales();
   }, []);
-
-  async function saveOrder(orderData: CreateOrderData): Promise<Order> {
-    setIsCreating(true);
-    setErrorMessage('');
-
-    try {
-      return await createOrder(orderData);
-    } catch (error) {
-      setErrorMessage(
-        (error as OrderError).response?.data?.message ??
-          'Não foi possível criar o pedido.'
-      );
-      throw error;
-    } finally {
-      setIsCreating(false);
-    }
-  }
 
   async function payOrder(orderId: string) {
     setErrorMessage('');
@@ -77,10 +58,8 @@ export function useOrders() {
   return {
     orders,
     isLoading,
-    isCreating,
     payingOrderId,
     errorMessage,
-    saveOrder,
     payOrder,
   };
 }
