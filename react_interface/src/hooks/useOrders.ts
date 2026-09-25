@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  getSales,
-  markOrderAsPaid,
-} from '../services/orderService';
+import { getSales, markOrderAsPaid } from '../services/orderService';
 import type { Order } from '../types/Order';
 
 interface OrderError {

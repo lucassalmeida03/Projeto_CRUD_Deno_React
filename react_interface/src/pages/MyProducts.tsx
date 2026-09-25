@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProducts';
 import { createProductSchema } from '../schemas/productSchema';
 import type { CreateProduct, Product } from '../types/Product';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -191,7 +192,6 @@ function ProductModal({
 
         <div className="p-4 bg-gray-50/80 border-t border-gray-100 flex justify-end space-x-3">
           <Button
-            type="button"
             onClick={handleClose}
             className="bg-red-600 hover:bg-red-700"
             disabled={isLoading}
@@ -284,14 +284,11 @@ export function MyProducts() {
                   <div className="flex items-baseline text-gray-900 font-extrabold">
                     <span className="text-xs mr-1">R$</span>
                     <span className="text-base">
-                      {product.price.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(product.price)}
                     </span>
                   </div>
                 </div>
                 <Button
-                  type="button"
                   className="h-8"
                   onClick={() => {
                     setEditingProduct(product);
@@ -301,7 +298,6 @@ export function MyProducts() {
                   Editar
                 </Button>
                 <Button
-                  type="button"
                   className="h-8 bg-red-600 hover:bg-red-700"
                   isLoading={deletingProductId === (product._id ?? product.id)}
                   onClick={() => void removeProduct(product)}

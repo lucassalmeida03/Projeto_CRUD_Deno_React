@@ -71,7 +71,6 @@ export function UsersDirectory() {
                   </div>
 
                   <Button
-                    type="button"
                     className="w-25 bg-red-600 hover:bg-red-700"
                     isLoading={deletingUserId === user._id}
                     onClick={() => void removeUser(user)}

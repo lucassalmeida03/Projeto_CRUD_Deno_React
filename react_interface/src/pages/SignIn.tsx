@@ -29,7 +29,6 @@ export function SignIn() {
 
     try {
       await login(result.data);
-      
     } catch {
       setErrorMessage('E-mail ou senha inválidos.');
     } finally {

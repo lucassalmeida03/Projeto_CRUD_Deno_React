@@ -1,14 +1,18 @@
-import { useState } from 'react';
 import { Button } from './Button';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+
+function getNavLinkClass({ isActive }: { isActive: boolean }) {
+  return `flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+    isActive
+      ? 'bg-indigo-600 text-white shadow-sm'
+      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+  }`;
+}
 
 export function Header() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const userRole = user?.role;
-  const [activeItem, setActiveItem] = useState('Vitrine / Catálogo');
-  const { logout } = useAuth();
   const canViewVitrine = userRole === 'admin' || userRole === 'customer';
   const canViewMeusProdutos = userRole === 'admin' || userRole === 'seller';
   const canViewUsuarios = userRole === 'admin';
@@ -17,77 +21,29 @@ export function Header() {
     <header className="w-full bg-white border-b border-gray-200 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <nav className="flex items-center space-x-2 md:space-x-4">
-          <button
-            onClick={() => {
-              setActiveItem('Pedidos & Compras');
-              if (userRole === 'customer') {
-                navigate('/ordersCustomer');
-              } else {
-                navigate('/orders');
-              }
-            }}
-            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl
-                 text-sm font-medium transition-all ${
-                   activeItem === 'Pedidos & Compras'
-                     ? 'bg-indigo-600 text-white shadow-sm'
-                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                 }`}
+          <NavLink
+            to={userRole === 'customer' ? '/ordersCustomer' : '/orders'}
+            className={getNavLinkClass}
           >
             Pedidos & Compras
-          </button>
+          </NavLink>
 
           {canViewVitrine && (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveItem('Vitrine / Catálogo');
-                navigate('/catalog');
-              }}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                activeItem === 'Vitrine / Catálogo'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
+            <NavLink to="/catalog" className={getNavLinkClass}>
               Vitrine / Catálogo
-            </button>
+            </NavLink>
           )}
 
           {canViewMeusProdutos && (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveItem('Meus Produtos');
-                navigate('/myProducts');
-              }}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm 
-                font-medium transition-all ${
-                  activeItem === 'Meus Produtos'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-            >
+            <NavLink to="/myProducts" className={getNavLinkClass}>
               Meus Produtos
-            </button>
+            </NavLink>
           )}
 
           {canViewUsuarios && (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveItem('Usuários & Perfis');
-                navigate('/directory');
-              }}
-
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm 
-                font-medium transition-all ${
-                  activeItem === 'Usuários & Perfis'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-            >
+            <NavLink to="/directory" className={getNavLinkClass}>
               Usuários & Perfis
-            </button>
+            </NavLink>
           )}
         </nav>
 

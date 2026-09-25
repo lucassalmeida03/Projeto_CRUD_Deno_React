@@ -140,7 +140,6 @@ export function CustomerOrders() {
                     <div className="w-full md:w-1/5 flex md:justify-center items-center space-x-2">
                       {isPending && (
                         <Button
-                          type="button"
                           onClick={() => void handleCancelOrder(orderId)}
                           disabled={isProcessing}
                           className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-bold"
@@ -151,7 +150,6 @@ export function CustomerOrders() {
 
                       {isCanceled && (
                         <Button
-                          type="button"
                           onClick={() => {
                             const valid = confirm(
                               'Tem certeza que deseja excluir esse pedido?'

@@ -28,15 +28,7 @@ export function CreateOrderModal({
   const [quantity, setQuantity] = useState(1);
   const [validationMessage, setValidationMessage] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      setQuantity(1);
-      setValidationMessage('');
-    }
-  }, [isOpen, product]);
-
   if (!isOpen) return null;
-
 
   const handleConfirm = () => {
     const result = createOrderSchema.safeParse({
@@ -120,7 +112,6 @@ export function CreateOrderModal({
 
         <div className="mt-8 flex justify-end space-x-3">
           <Button
-            type="button"
             onClick={onClose}
             disabled={isLoading}
             className="w-auto px-5 bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -128,7 +119,6 @@ export function CreateOrderModal({
             Cancelar
           </Button>
           <Button
-            type="button"
             onClick={handleConfirm}
             isLoading={isLoading}
             className="w-auto px-6"
@@ -240,13 +230,11 @@ export function Catalog() {
                   <div className="flex items-baseline text-gray-900 font-extrabold">
                     <span className="text-xs mr-1">R$</span>
                     <span className="text-base">
-                      {formatCurrency(product.price)
-                      }
+                      {formatCurrency(product.price)}
                     </span>
                   </div>
                 </div>
                 <Button
-                  type="button"
                   className="w-32"
                   disabled={product.stock < 1}
                   onClick={() => {

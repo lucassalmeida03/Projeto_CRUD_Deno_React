@@ -129,7 +129,6 @@ export function OrdersManagement() {
                     <div className="w-full md:w-1/6 flex md:justify-center items-center">
                       {isPending ? (
                         <Button
-                          type="button"
                           onClick={() => void payOrder(orderId)}
                           disabled={payingOrderId === orderId}
                           className=" bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[12px] font-bold"
