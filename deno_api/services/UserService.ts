@@ -50,42 +50,9 @@ class UserService {
 
   // Usado para buscar usuário no banco para iniciar sessão
   async getUserByEmail(email: string) {
-    return await UserModel.findOne({ email }).select("+password name email role");
-  }
-
-  async updateUser(
-    id: string,
-    idRequest: string,
-    roleRequest: string,
-    updateData: Partial<IUser>,
-  ): Promise<IUser> {
-    const isOwner = id === idRequest;
-    const isAdmin = roleRequest === userRole.ADMIN;
-
-    if (!isOwner && !isAdmin) {
-      throw throwlhos.err_unauthorized(
-        "Acesso negado: Você não tem permissão para alterar esse perfil.",
-      );
-    }
-
-    if ("password" in updateData && updateData.password) {
-      const saltRounds = 8;
-      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
-    }
-
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true, runValidators: true },
+    return await UserModel.findOne({ email }).select(
+      "+password name email role",
     );
-
-    if (!updatedUser) {
-      throw throwlhos.err_badRequest(
-        "Usuário não encontrado para atualização.",
-      );
-    }
-
-    return updatedUser;
   }
 
   async deleteUser(

@@ -8,14 +8,14 @@ import { UserModel } from "../models/User/User.ts";
 class ProductService {
   async createProduct(productData: IProduct): Promise<IProduct> {
     const productEntity = new ProductClass(productData);
-    
+
     const newProduct = await ProductModel.create(productEntity);
 
     await UserModel.findByIdAndUpdate(productData.user, {
       $push: { products: newProduct._id },
     });
-    
-    return newProduct
+
+    return newProduct;
   }
 
   async getAllProducts(): Promise<IProduct[]> {
@@ -26,21 +26,6 @@ class ProductService {
     return await ProductModel.find({ user: sellerId })
       .populate("user", "name email")
       .sort({ createdAt: -1 });
-  }
-
-  async getProductById(id: string): Promise<IProduct> {
-    if (!isValidObjectId(id)) {
-      throw throwlhos.err_badRequest("ID do produto inválido.");
-    }
-
-    const product = await ProductModel.findById(id).populate(
-      "user",
-      "name email role",
-    );
-    if (!product) {
-      throw throwlhos.err_notFound("Produto não encontrado.");
-    }
-    return product;
   }
 
   async updateProduct(

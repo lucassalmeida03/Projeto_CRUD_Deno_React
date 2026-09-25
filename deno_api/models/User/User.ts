@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 import { IUser } from "./IUser.ts";
 
 export class UserClass implements IUser {
@@ -6,7 +6,7 @@ export class UserClass implements IUser {
   email: IUser["email"];
   password: IUser["password"];
   role?: IUser["role"];
-  products?: IUser["products"]
+  products?: IUser["products"];
   _id?: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -21,7 +21,6 @@ export class UserClass implements IUser {
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
   }
-  
 }
 
 const UserSchema = new Schema<IUser>({
@@ -30,15 +29,14 @@ const UserSchema = new Schema<IUser>({
   password: { type: String, required: true, select: false },
   role: { type: String, required: true },
   products: [
-      {
-        type: Types.ObjectId,
-        ref: "Product",
-      },
-    ],
+    {
+      type: Types.ObjectId,
+      ref: "Product",
+    },
+  ],
 }, {
   timestamps: true,
 });
-
 
 UserSchema.loadClass(UserClass);
 

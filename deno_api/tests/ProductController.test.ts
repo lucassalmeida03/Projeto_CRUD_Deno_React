@@ -136,60 +136,16 @@ Deno.test("should get all products", async () => {
 
 // GETALL - Negative
 Deno.test("should not get all products - database failure", async () => {
-
-    try {
-    await mongoose.connection.close()
+  try {
+    await mongoose.connection.close();
     const MockRequest = {} as unknown as Request;
     const result = await productsController.getAll(MockRequest, MockResponser);
 
     assertEquals(result.code, 400);
     assertEquals(result.message, "Erro ao listar produtos.");
-     }
-     finally {
-          await connectDB();
-     }
-  
-});
-
-// GETBYID - Positive
-Deno.test("should get a product by id", async () => {
-  const product = await ProductModel.findOne({ title: "Test Product" });
-  assertExists(product, "Produto deveria existir.");
-
-  const id = product._id.toString()
-  const MockRequest = {
-    params: { id: id },
-  } as unknown as Request;
-
-  const result = await productsController.getById(MockRequest, MockResponser);
-
-  assertEquals(result.code, 200);
-  assertEquals(result.message, `Produto com ${id} buscado com sucesso.`);
-
-});
-
-/// GETBYID - Negative - invalid id
-Deno.test("should not get a product by id - invalid id", async () => {
-  const MockRequest = {
-    params: { id: "id_invalido" },
-  } as unknown as Request;
-
-  const result = await productsController.getById(MockRequest, MockResponser);
-
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Produto não encontrado.");
-});
-
-/// GETBYID - Negative - not found
-Deno.test("should not get a product by id - product not found", async () => {
-  const MockRequest = {
-    params: { id: new mongoose.Types.ObjectId().toString() },
-  } as unknown as Request;
-
-  const result = await productsController.getById(MockRequest, MockResponser);
-
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Produto não encontrado.");
+  } finally {
+    await connectDB();
+  }
 });
 
 // GETMYPRODUCTS - Positive
@@ -204,11 +160,13 @@ Deno.test("should get my products", async () => {
     },
   } as unknown as Request;
 
-  const result = await productsController.getMyProducts(MockRequest, MockResponser);
+  const result = await productsController.getMyProducts(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 200);
   assertEquals(result.message, "Busca completa!");
-
 });
 
 // GETMYPRODUCTS - Negative - user id missing
@@ -219,7 +177,10 @@ Deno.test("should not get my products - user id missing", async () => {
     },
   } as unknown as Request;
 
-  const result = await productsController.getMyProducts(MockRequest, MockResponser);
+  const result = await productsController.getMyProducts(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "ID do vendedor não fornecido.");
@@ -230,7 +191,7 @@ Deno.test("should not get my products - database failure", async () => {
   const user = await UserModel.findOne({ email: testEmailSeller });
   assertExists(user, "Usuário deveria existir.");
 
-  await mongoose.connection.close()
+  await mongoose.connection.close();
 
   try {
     const MockRequest = {
@@ -240,12 +201,15 @@ Deno.test("should not get my products - database failure", async () => {
       },
     } as unknown as Request;
 
-    const result = await productsController.getMyProducts(MockRequest, MockResponser);
+    const result = await productsController.getMyProducts(
+      MockRequest,
+      MockResponser,
+    );
 
     assertEquals(result.code, 400);
     assertEquals(result.message, "Erro ao buscar produtos do vendedor.");
   } finally {
-    await connectDB()
+    await connectDB();
   }
 });
 
@@ -407,4 +371,3 @@ Deno.test("should delete a product", async () => {
   assertEquals(result.code, 200);
   assertEquals(result.message.message, "Produto removido com sucesso!");
 });
-

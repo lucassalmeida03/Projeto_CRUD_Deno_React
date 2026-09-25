@@ -13,7 +13,6 @@ const UsersController = new usersController();
 const testEmail = "test_email@gmail.com";
 const testEmailAdmin = "admin_getall@test.com";
 
-
 Deno.test.beforeAll(async () => {
   if (mongoose.connection.readyState === 0) {
     await connectDB();
@@ -119,93 +118,6 @@ Deno.test("should not get all users - authorization failure", async () => {
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "Não foi possível buscar todos os usuários");
-});
-
-// Update - positive
-Deno.test("should update an existing user successfully", async () => {
-  const user = await UserModel.findOne({ email: testEmail });
-
-  assertExists(user, "O usuário deveria existir");
-
-  const updatePayload = {
-    name: "Updated Name Test",
-  };
-
-  const MockRequest = {
-    params: { id: user._id.toString() },
-    body: updatePayload,
-
-    user: {
-      _id: user._id.toString(),
-      role: "customer",
-    },
-  } as unknown as Request;
-
-  const result = await UsersController.updateUser(
-    MockRequest,
-    MockResponser,
-  );
-
-  assertEquals(result.code, 200);
-  assertEquals(result.message, "Usuário atualizado com sucesso");
-});
-
-// update - negative - validação
-Deno.test("should not update an user with min caracteres", async () => {
-  const user = await UserModel.findOne({ email: testEmail });
-
-  assertExists(user, "O usuário deveria existir");
-
-  const updatePayload = {
-    name: "U",
-  };
-
-  const MockRequest = {
-    params: { id: user._id.toString() },
-    body: updatePayload,
-
-    user: {
-      _id: user._id.toString(),
-      role: "customer",
-    },
-  } as unknown as Request;
-
-  const result = await UsersController.updateUser(
-    MockRequest,
-    MockResponser,
-  );
-
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Erro de validação!");
-});
-
-// update - negative - autorização
-Deno.test("should not update with a different person id", async () => {
-  const user = await UserModel.findOne({ email: testEmail });
-
-  assertExists(user, "O usuário deveria existir");
-
-  const updatePayload = {
-    name: "Test Name",
-  };
-
-  const MockRequest = {
-    params: { id: user._id.toString() },
-    body: updatePayload,
-
-    user: {
-      _id: "iderro",
-      role: "customer",
-    },
-  } as unknown as Request;
-
-  const result = await UsersController.updateUser(
-    MockRequest,
-    MockResponser,
-  );
-
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Não foi possível fazer alterações");
 });
 
 // delete - negative - autorização

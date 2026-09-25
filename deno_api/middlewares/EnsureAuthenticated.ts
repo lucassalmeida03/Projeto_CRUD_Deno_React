@@ -25,7 +25,7 @@ function ensureAuthenticated(req: Request, _res: Response, next: NextFunction) {
 
     req.user = {
       _id: user_id,
-      role
+      role,
     };
 
     return next();

@@ -65,21 +65,8 @@ class ProductsController {
     }
   };
 
-  getById = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-
-      const product = await this.productService.getProductById(id);
-
-      return res.send_ok(`Produto com ${id} buscado com sucesso.`, { product });
-    } catch (error) {
-      return res.send_badRequest("Produto não encontrado.", { error });
-    }
-  };
-
   getMyProducts = async (req: Request, res: Response) => {
     try {
-    
       const sellerId = req.user._id;
 
       if (!sellerId) {
@@ -90,7 +77,9 @@ class ProductsController {
 
       return res.send_ok("Busca completa!", { products });
     } catch (error) {
-      return res.send_badRequest("Erro ao buscar produtos do vendedor.", { error });
+      return res.send_badRequest("Erro ao buscar produtos do vendedor.", {
+        error,
+      });
     }
   };
 
@@ -112,7 +101,7 @@ class ProductsController {
         role,
       );
 
-      return res.send_ok("Produto atualizado com sucesso!", { updatedProduct } );
+      return res.send_ok("Produto atualizado com sucesso!", { updatedProduct });
     } catch (error) {
       return res.send_badRequest("Erro ao atualizar produto.", { error });
     }

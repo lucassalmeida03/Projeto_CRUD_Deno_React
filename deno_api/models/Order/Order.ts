@@ -43,9 +43,9 @@ const OrderSchema = new Schema<IOrder>(
       default: "pending",
     },
   },
-  { 
-    timestamps: true 
-  }
+  {
+    timestamps: true,
+  },
 );
 
 OrderSchema.loadClass(OrderClass);

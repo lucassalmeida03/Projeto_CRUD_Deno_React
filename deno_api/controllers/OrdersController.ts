@@ -32,10 +32,10 @@ class OrdersController {
     try {
       const customerId = req.user._id;
 
-      if(!req.user._id) {
-        throw throwlhos.err_badRequest("User sem ID especificado.")
+      if (!req.user._id) {
+        throw throwlhos.err_badRequest("User sem ID especificado.");
       }
-      
+
       const orders = await this.orderService.getOrders(customerId);
 
       return res.send_ok("Operação concluída", { data: orders });
@@ -48,8 +48,8 @@ class OrdersController {
     try {
       const sellerId = req.user._id;
 
-      if(!req.user._id) {
-        throw throwlhos.err_badRequest("User sem ID especificado.")
+      if (!req.user._id) {
+        throw throwlhos.err_badRequest("User sem ID especificado.");
       }
       const sales = await this.orderService.getSales(sellerId);
 

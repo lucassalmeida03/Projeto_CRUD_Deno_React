@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 import { IProduct } from "./IProduct.ts";
 
 export class ProductClass implements IProduct {
@@ -17,11 +17,10 @@ export class ProductClass implements IProduct {
     this.price = product.price;
     this.stock = product.stock;
     this._id = product._id;
-    this.user = product.user
+    this.user = product.user;
     this.createdAt = product.createdAt;
     this.updatedAt = product.updatedAt;
   }
-
 }
 
 const ProductSchema = new Schema<IProduct>(
@@ -30,11 +29,11 @@ const ProductSchema = new Schema<IProduct>(
     description: { type: String },
     price: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
-    user: { type: Types.ObjectId, ref: "User", required: true }
+    user: { type: Types.ObjectId, ref: "User", required: true },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 ProductSchema.loadClass(ProductClass);

@@ -7,5 +7,5 @@ export interface IProduct extends IBaseInterface {
   description?: string;
   price: number;
   stock: number;
-  user: Types.ObjectId | IUser
+  user: Types.ObjectId | IUser;
 }

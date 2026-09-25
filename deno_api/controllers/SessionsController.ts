@@ -30,13 +30,13 @@ class sessionsController {
     try {
       const { email, password } = req.body;
 
-      const errors = rc.check({email}, {password});
+      const errors = rc.check({ email }, { password });
       if (errors) {
         return res.send_badRequest("Erro de validação!", { errors });
       }
 
       const user = await this.userService.getUserByEmail(email);
-      
+
       if (!user) {
         throw throwlhos.err_badRequest("E-mail ou senha inválidos.");
       }
@@ -57,18 +57,14 @@ class sessionsController {
       const userObject = user.toObject();
       const { password: _hashedPassword, ...userWithoutPassword } = userObject;
 
-     return res.send_ok("Sessão criada com sucesso!", {
+      return res.send_ok("Sessão criada com sucesso!", {
         token,
         user: userWithoutPassword,
-        
       });
-
     } catch (error) {
-      return res.send_badRequest("Algo deu errado!", {error});
+      return res.send_badRequest("Algo deu errado!", { error });
     }
   };
-
-  
 }
 
-export { sessionsController }
+export { sessionsController };

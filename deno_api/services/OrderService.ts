@@ -183,9 +183,10 @@ export class OrderService {
       throw throwlhos.err_badRequest("Id do cliente da venda inexistente.");
     }
 
-    const customerId = typeof order.customer === "object" && "_id" in order.customer
-      ? order.customer._id.toString()
-      : order.customer.toString();
+    const customerId =
+      typeof order.customer === "object" && "_id" in order.customer
+        ? order.customer._id.toString()
+        : order.customer.toString();
     const isCustomer = customerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;
 
@@ -196,7 +197,9 @@ export class OrderService {
     }
 
     if (!isCustomer && !isAdmin) {
-      throw throwlhos.err_forbidden("Você não tem permissão para excluir esse pedido.");
+      throw throwlhos.err_forbidden(
+        "Você não tem permissão para excluir esse pedido.",
+      );
     }
 
     if (order.status !== "canceled") {

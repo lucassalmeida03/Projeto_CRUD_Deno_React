@@ -58,7 +58,7 @@ class usersController {
         role,
       });
 
-      return res.send_created("Usuário criado com sucesso!", {newUser} );
+      return res.send_created("Usuário criado com sucesso!", { newUser });
     } catch (error) {
       return res.send_badRequest("Erro ao criar usuário", error);
     }
@@ -69,36 +69,9 @@ class usersController {
       const users = await this.userService.getAllUsers(req.user.role);
       return res.send_ok("Usuarios encontrados:", { users });
     } catch (error) {
-      return res.send_badRequest("Não foi possível buscar todos os usuários", { error });
-    }
-  };
-
-  updateUser = async (req: Request, res: Response) => {
-    try {
-      const { name, email, password } = req.body;
-
-      const errors = rc.check(
-        { name, isRequiredField: false },
-        { email, isRequiredField: false },
-        { password, isRequiredField: false },
-      );
-
-      if (errors) {
-        return res.send_badRequest("Erro de validação!", { errors });
-      }
-      const { id } = req.params;
-      const { role, _id } = req.user;
-
-      const updateUser = await this.userService.updateUser(
-        id,
-        _id,
-        role,
-        req.body,
-      );
-
-      return res.send_ok("Usuário atualizado com sucesso", { updateUser });
-    } catch (error) {
-      return res.send_badRequest("Não foi possível fazer alterações", error);
+      return res.send_badRequest("Não foi possível buscar todos os usuários", {
+        error,
+      });
     }
   };
 
@@ -117,7 +90,10 @@ class usersController {
         `Usuário do id: ${id} foi deletado com sucesso.`,
       );
     } catch (error) {
-      return res.send_badRequest("Não foi possível concluir a operação.", error);
+      return res.send_badRequest(
+        "Não foi possível concluir a operação.",
+        error,
+      );
     }
   };
 }

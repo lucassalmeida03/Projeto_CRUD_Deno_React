@@ -38,7 +38,10 @@ Deno.test("should create a new session", async () => {
     },
   } as unknown as Request;
 
-  const result = await sessionController.createSession(MockRequest, MockResponser);
+  const result = await sessionController.createSession(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 200);
   assertEquals(result.message, "Sessão criada com sucesso!");
@@ -55,7 +58,10 @@ Deno.test("should not create a session - invalid email format", async () => {
     },
   } as unknown as Request;
 
-  const result = await sessionController.createSession(MockRequest, MockResponser);
+  const result = await sessionController.createSession(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "Erro de validação!");
@@ -70,7 +76,10 @@ Deno.test("should not create a session - user not found", async () => {
     },
   } as unknown as Request;
 
-  const result = await sessionController.createSession(MockRequest, MockResponser);
+  const result = await sessionController.createSession(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "Algo deu errado!");
@@ -86,7 +95,10 @@ Deno.test("should not create a session - wrong password", async () => {
     },
   } as unknown as Request;
 
-  const result = await sessionController.createSession(MockRequest, MockResponser);
+  const result = await sessionController.createSession(
+    MockRequest,
+    MockResponser,
+  );
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "Algo deu errado!");

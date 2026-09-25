@@ -3,7 +3,7 @@ import { IBaseInterface } from "../../base/IBaseInterface.ts";
 import { IUser } from "../User/IUser.ts";
 import { IProduct } from "../Product/IProduct.ts";
 
-export type OrderStatus = "pending" | "paid" | "canceled"
+export type OrderStatus = "pending" | "paid" | "canceled";
 
 export interface IOrder extends IBaseInterface {
   customer: Types.ObjectId | IUser;
