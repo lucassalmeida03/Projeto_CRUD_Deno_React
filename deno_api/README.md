@@ -1,236 +1,601 @@
-# Projeto Deno CRUD - (API simples baseada em sistemas E-Commerce - Somente algumas funcionalidades.)
+# Deno Commerce API
 
-API RESTful desenvolvida com TypeScript, Deno, Express e MongoDB.
+API REST para um sistema simples de e-commerce, desenvolvida com Deno, TypeScript, Express, Mongoose e MongoDB.
 
-## 🚀 Tecnologias e Pacotes
+## Requisitos
 
-- **Deno** — Runtime moderno para TypeScript e JavaScript
-- **express** — Framework web para gerenciamento de rotas e middlewares
-- **mongoose** — ODM para modelagem e manipulação de dados no MongoDB
-- **bcrypt** — Algoritmo de hashing seguro para criptografia de senhas
-- **jsonwebtoken** — Autenticação e autorização via Tokens JWT
-- **request-check** — Validação de schemas e payloads de requisição
-- **responser** — Padronização de respostas HTTP (`send_created`,
-  `send_badRequest`, etc.)
-- **throwlhos** — Tratamento centralizado e disparo de erros customizados
-- **morgan** — Logger HTTP para exibição de logs de requisições no console
-- **@zarco/isness** — Utilitário para comparação e validação de tipos de dados
-- **@std/assert** — Módulo padrão do Deno para asserções e suíte de testes
-  (`assertEquals`, `assertExists`)
+- Deno 2.x instalado.
+- MongoDB acessível pela aplicação. Os testes também usam a conexão definida em `MONGODB_URI`.
+- Para criação de pedidos, MongoDB deve aceitar transações (por exemplo, MongoDB Atlas ou replica set local).
 
-## 🛠️ Instalação e Execução
+## Configuração
 
-### Pré-requisitos
-
-- **Deno** (v1.38+ ou v2.x) instalado na máquina.
-- Instância do **MongoDB** rodando localmente ou conexão ativa com MongoDB
-  Atlas.
-
-### Configuração Passo a Passo
-
-1. **Clone o repositório:**
-
-   ```bash
-   git clone https://github.com/lucassalmeida03/deno_api.git
-   ```
-
-2. **Crie o arquivo .env na raiz**
+Na pasta `deno_api`, crie um arquivo `.env`:
 
 ```env
-BASE_URL="http://localhost:"
-MONGODB_URI=sua_connection_string_mongodb
-PORT=3000 ou sua escolha
-JWT_SECRET="sua_chave_secreta"
+PORT=3000
+MONGODB_URI=mongodb+srv://<usuario>:<senha>@<cluster>/<banco>
+JWT_SECRET=uma_chave_secreta_longa
 ```
 
-3. **Inicie a aplicação** deno task dev
+Não versione `.env` nem compartilhe credenciais. O comando de desenvolvimento já permite ao Deno carregar variáveis do arquivo.
 
-### 🧪 Instruções para Rodar os Testes
+## Executar
 
-A suíte de testes utiliza o test runner nativo do Deno em conjunto com a
-biblioteca @std/assert.
+A partir da pasta `deno_api`:
 
-_Rodar todos os testes:_ deno task test
+```bash
+deno task dev
+```
 
-### 📌 Documentação dos Endpoints
+A API estará disponível em `http://localhost:3000` (ou na porta definida em `PORT`). O servidor conecta ao MongoDB antes de começar a escutar.
 
-**🔒 Rotas Privadas: Exigem o envio do cabeçalho Authorization: Bearer
-<seu_token_jwt>.**
+## Testes
 
-_🔑 Autenticação & Sessões (/sessions)_
+Execute todos os testes a partir da pasta `deno_api`:
 
-- `POST /sessions (Público)` Descrição: Autentica o usuário e gera o token JWT.
+```bash
+deno task test
+```
+
+A task roda `deno test` com as permissões necessárias, executa os testes em `tests/` e produz relatórios de cobertura em `coverage/`.
+
+**Atenção:** a suíte conecta ao banco apontado por `MONGODB_URI`, cria e remove registros de teste e desconecta ao terminar. Configure uma base de dados exclusiva para testes; não use uma base com dados importantes.
+
+Para exibir detalhes da cobertura depois dos testes:
+
+```bash
+deno task test-coverage-detailed
+```
+
+## Autenticação e respostas
+
+As rotas de cadastro (`POST /users`) e login (`POST /sessions`) são públicas. As demais rotas exigem um JWT no cabeçalho:
+
+```http
+Authorization: Bearer <token>
+```
+
+Papéis usados pela aplicação: `customer`, `seller` e `admin`. Uma rota pode exigir papel e também aplicar regras de propriedade do recurso, como permitir que apenas o dono de um produto o altere.
+
+Respostas de sucesso seguem o envelope do `responser`, normalmente com `success`, `message`, `data`, `code` e `status`. O conteúdo de `data` varia por endpoint. Em algumas rotas, o controller também passa um objeto com uma propriedade `data`, produzindo `data.data`; os exemplos abaixo registram o formato atual, inclusive esse aninhamento.
+
+Exemplos usam `http://localhost:3000`. Substitua IDs e o token pelos valores retornados pela sua instalação.
+
+## Rotas
+
+### Sessões
+
+#### `POST /sessions` — login (pública)
+
+Request:
+
+```http
+POST /sessions
+Content-Type: application/json
+```
 
 ```json
-Exemplo de Request:
-JSON
 {
-  "email": "maria@email.com",
+  "email": "maria@example.com",
   "password": "senhaSegura123"
 }
 ```
 
+Response `200 OK`:
+
 ```json
-Exemplo de Response (200 OK):
-JSON
 {
-  "status": 200,
-  "message": "Sessão criada com sucesso",
+  "success": true,
+  "message": "Sessão criada com sucesso!",
   "data": {
+    "token": "<jwt>",
     "user": {
-      "_id": "65f0123456789abcdef01234",
+      "_id": "66f4b8f2c3a21a0012345678",
       "name": "Maria Silva",
-      "email": "maria@email.com",
+      "email": "maria@example.com",
       "role": "customer"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
+    }
+  },
+  "code": 200,
+  "status": "OK"
 }
 ```
 
-_👤 Usuários (/users)_
+A senha não é incluída na resposta de login.
 
-- `POST /users (Público - Qualquer perfil)` - Descrição: Cadastro de novos
-  usuários no sistema.
+### Usuários
+
+#### `POST /users` — cadastro (pública)
+
+`role` é opcional e o controller usa `customer` quando omitido. O endpoint atualmente aceita `role` informado no corpo; por segurança, não permita que clientes escolham `seller` ou `admin` em uma aplicação pública sem uma regra de autorização no servidor.
+
+Request:
+
+```http
+POST /users
+Content-Type: application/json
+```
 
 ```json
-Exemplo de Request:
-JSON
 {
   "name": "Maria Silva",
-  "email": "maria@email.com",
-  "password": "senhaSegura123",
-  "role": "customer"
+  "email": "maria@example.com",
+  "password": "senhaSegura123"
 }
 ```
 
+Response `201 Created` (exemplo abreviado):
+
 ```json
-Exemplo de Response (201 Created):
-JSON
 {
+  "success": true,
   "message": "Usuário criado com sucesso!",
-    "data": {
-        "newUser": {
-            "name": "Maria Silva",
-            "email": "maria@email.com",
-            "password": "$2b$08$WUZi7X3KbkcxHWQAHjKJ3eFX8BTV14qMTCuPTewoI/8zRIWEE5Bhq",
-            "role": "customer",
-            "_id": "6aad7e8e7286e595275c2c5e",
-            "createdAt": "2026-09-18T18:10:22.199Z",
-            "updatedAt": "2026-09-18T18:10:22.217Z",
-          }
-       }
- }
-```
-
-- `GET /users (Privado - Apenas admin)` - Descrição: Lista todos os usuários
-  cadastrados na base.
-
-- `PUT /users/:id (Privado - Usuário Autenticado)` - Descrição: Atualiza as
-  informações do próprio perfil do usuário.
-
-- `DELETE /users/:id (Privado - Usuário Autenticado)` - Descrição: Remove a
-  conta do usuário.
-
-_📦 Produtos (/products)_
-
-- `GET /products (Privado - Permissões: customer, admin)` - Descrição: Lista a
-  vitrine geral de produtos disponíveis.
-
-- `GET /products/my-products (Privado - Permissão: seller)` - Descrição: Lista
-  apenas os produtos cadastrados pelo vendedor logado.
-
-- `GET /products/:id (Privado - Qualquer Usuário Autenticado)` - Descrição:
-  Retorna os detalhes de um produto específico através do ID.
-
-- `POST /products (Privado - Permissões: seller, admin)` - Descrição: Cadastra
-  um novo produto na loja.
-
-```json
-Exemplo de Request:
-JSON
-{
- "title": "Teclado Mecânico RGB",
- "price": 299.90,
- "stock": 10
-}
-```
-
-```json
-Exemplo de Response(201 Created):
-JSON
-"message": "Produto cadastrado com sucesso!",
-   "data": {
-           "title": "Teclado Mecânico RGB",
-           "price": 299.9,
-           "stock": 10,
-           "user": "6aad7e8e7286e595275c2c5e",
-           "_id": "6aad84927286e595275c2c61",
-           "createdAt": "2026-09-18T18:36:02.926Z",
-           "updatedAt": "2026-09-18T18:36:02.926Z",
-   }
-```
-
-- `PUT /products/:id (Privado - Permissões: seller, admin)` - Descrição:
-  Atualiza as informações de um produto existente.
-
-- `DELETE /products/:id (Privado - Permissões: seller, admin)` - Descrição:
-  Remove um produto do catálogo.
-
-_🛍️ Pedidos (/orders)_
-
-- `POST /orders (Privado - Permissões: customer, admin)` - Descrição: Realiza a
-  compra de um produto.
-
-```json
-Exemplo de Request:
-JSON
-{
- "productId": "66f4b8f2c3a21a0012345678",
- "quantity": 10
-}
-```
-
-```json
-Exemplo de Response (201 Created):
-JSON
-{
- "message": "Pedido realizado com sucesso!",
- "data": {
   "data": {
-           "customer": {
-               "_id": "6aad7e8e7286e595275c2c5e",
-               "name": "Maria Silva Santos",
-               "email": "maria@email.com"
-           },
-           "product": {
-               "_id": "6aaad5b57faa4b9642545016",
-               "title": "Manga",
-               "price": 10.2
-           },
-           "seller": "6aad82567286e595275c2c60",
-           "totalAmount": 102,
-           "quantity": 10,
-           "status": "pending",
-           "_id": "6aad82567286e595275c2c60",
-           "createdAt": "2026-09-18T18:26:30.517Z",
-           "updatedAt": "2026-09-18T18:26:30.517Z",
- }
-}
+    "newUser": {
+      "_id": "66f4b8f2c3a21a0012345678",
+      "name": "Maria Silva",
+      "email": "maria@example.com",
+      "password": "<hash bcrypt>",
+      "role": "customer",
+      "createdAt": "2026-09-25T12:00:00.000Z",
+      "updatedAt": "2026-09-25T12:00:00.000Z"
+    }
+  },
+  "code": 201,
+  "status": "CREATED"
 }
 ```
 
-- `GET /orders/my-orders (Privado - Permissões: customer, admin)` - Descrição:
-  Lista o histórico de compras do cliente logado.
+**Atenção:** o controller atual inclui o hash da senha no objeto retornado pelo cadastro. Embora não seja a senha original, esse hash não deve ser exposto; o backend deve removê-lo antes de responder.
 
-- `GET /orders/my-sales (Privado - Permissões: seller, admin)` - Descrição:
-  Lista os pedidos de vendas recebidos pelo vendedor logado.
+#### `GET /users` — listar usuários (admin)
 
-- `PATCH /orders/:id/cancel (Privado - Permissões: customer, admin)` -
-  Descrição: Cancela o pedido indicado no parâmetro ID.
+Request:
 
-- `PATCH /orders/:id/pay (Privado - Permissões: seller, admin)` - Descrição:
-  Altera o status do pedido para pago.
+```http
+GET /users
+Authorization: Bearer <token-admin>
+```
 
-- `DELETE /orders/:id/delete (Privado - Permissões: customer, admin)` -
-  Descrição: Remove o registro de um pedido da base de dados.
+Response `200 OK` (exemplo abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Usuarios encontrados:",
+  "data": {
+    "users": [
+      {
+        "_id": "66f4b8f2c3a21a0012345678",
+        "name": "Maria Silva",
+        "email": "maria@example.com",
+        "role": "customer"
+      }
+    ]
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `DELETE /users/:id` — excluir usuário (usuário autenticado; dono ou admin)
+
+Request:
+
+```http
+DELETE /users/66f4b8f2c3a21a0012345678
+Authorization: Bearer <token>
+```
+
+Response `200 OK`:
+
+```json
+{
+  "success": true,
+  "message": "Usuário do id: 66f4b8f2c3a21a0012345678 foi deletado com sucesso.",
+  "code": 200,
+  "status": "OK"
+}
+```
+
+### Produtos
+
+#### `POST /products` — criar produto (seller ou admin)
+
+O `user` do produto é definido pelo usuário autenticado. Não envie esse campo no body.
+
+Request:
+
+```http
+POST /products
+Authorization: Bearer <token-seller>
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "Teclado Mecânico RGB",
+  "description": "Teclado mecânico com iluminação RGB.",
+  "price": 299.9,
+  "stock": 10
+}
+```
+
+Response `201 Created` (formato atual, abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Produto cadastrado com sucesso!",
+  "data": {
+    "data": {
+      "_id": "66f4b8f2c3a21a0012345679",
+      "title": "Teclado Mecânico RGB",
+      "description": "Teclado mecânico com iluminação RGB.",
+      "price": 299.9,
+      "stock": 10,
+      "user": "66f4b8f2c3a21a0012345678",
+      "createdAt": "2026-09-25T12:00:00.000Z",
+      "updatedAt": "2026-09-25T12:00:00.000Z"
+    }
+  },
+  "code": 201,
+  "status": "CREATED"
+}
+```
+
+O objeto `data.data` é aninhado porque o controller passa `{ data: newProduct }` para o `responser`.
+
+#### `GET /products` — catálogo (customer ou admin)
+
+Request:
+
+```http
+GET /products
+Authorization: Bearer <token-customer-ou-admin>
+```
+
+Response `200 OK` (exemplo abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Lista de produtos completa:",
+  "data": {
+    "products": [
+      {
+        "_id": "66f4b8f2c3a21a0012345679",
+        "title": "Teclado Mecânico RGB",
+        "description": "Teclado mecânico com iluminação RGB.",
+        "price": 299.9,
+        "stock": 10,
+        "user": {
+          "_id": "66f4b8f2c3a21a0012345678",
+          "name": "João Vendedor",
+          "email": "joao@example.com",
+          "role": "seller"
+        }
+      }
+    ]
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `GET /products/my-products` — produtos do vendedor (seller ou admin)
+
+A consulta filtra produtos pelo ID do usuário autenticado.
+
+Request:
+
+```http
+GET /products/my-products
+Authorization: Bearer <token-seller>
+```
+
+Response `200 OK` (formato igual ao catálogo; lista abreviada):
+
+```json
+{
+  "success": true,
+  "message": "Busca completa!",
+  "data": {
+    "products": [
+      {
+        "_id": "66f4b8f2c3a21a0012345679",
+        "title": "Teclado Mecânico RGB",
+        "price": 299.9,
+        "stock": 10,
+        "user": {
+          "_id": "66f4b8f2c3a21a0012345678",
+          "name": "João Vendedor",
+          "email": "joao@example.com"
+        }
+      }
+    ]
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `PUT /products/:id` — atualizar produto (seller ou admin; dono do produto ou admin)
+
+Request:
+
+```http
+PUT /products/66f4b8f2c3a21a0012345679
+Authorization: Bearer <token-seller>
+Content-Type: application/json
+```
+
+O controller valida o body com os campos do produto. Exemplo:
+
+```json
+{
+  "title": "Teclado Mecânico RGB V2",
+  "description": "Versão atualizada.",
+  "price": 329.9,
+  "stock": 8
+}
+```
+
+Response `200 OK` (abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Produto atualizado com sucesso!",
+  "data": {
+    "updatedProduct": {
+      "_id": "66f4b8f2c3a21a0012345679",
+      "title": "Teclado Mecânico RGB V2",
+      "description": "Versão atualizada.",
+      "price": 329.9,
+      "stock": 8
+    }
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `DELETE /products/:id` — excluir produto (seller ou admin; dono do produto ou admin)
+
+Request:
+
+```http
+DELETE /products/66f4b8f2c3a21a0012345679
+Authorization: Bearer <token-seller>
+```
+
+Response `200 OK`:
+
+```json
+{
+  "success": true,
+  "message": {
+    "success": true,
+    "message": "Produto removido com sucesso!"
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+O controller atualmente passa um objeto como primeiro argumento de `send_ok`; por isso o campo `message` pode conter um objeto. Esse formato é inconsistente com as outras respostas.
+
+### Pedidos
+
+#### `POST /orders` — criar pedido (customer ou admin)
+
+O pedido é criado para o usuário autenticado. O estoque é validado e reduzido durante a operação. `quantity` é opcional e assume `1`.
+
+Request:
+
+```http
+POST /orders
+Authorization: Bearer <token-customer>
+Content-Type: application/json
+```
+
+```json
+{
+  "productId": "66f4b8f2c3a21a0012345679",
+  "quantity": 2
+}
+```
+
+Response `201 Created` (formato atual, abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Produto adquirido com sucesso!",
+  "data": {
+    "data": {
+      "_id": "66f4b8f2c3a21a0012345680",
+      "customer": {
+        "_id": "66f4b8f2c3a21a0012345678",
+        "name": "Maria Silva",
+        "email": "maria@example.com"
+      },
+      "product": {
+        "_id": "66f4b8f2c3a21a0012345679",
+        "title": "Teclado Mecânico RGB",
+        "price": 299.9
+      },
+      "seller": {
+        "_id": "66f4b8f2c3a21a0012345681",
+        "name": "João Vendedor",
+        "email": "joao@example.com"
+      },
+      "totalAmount": 599.8,
+      "quantity": 2,
+      "status": "pending",
+      "createdAt": "2026-09-25T12:00:00.000Z",
+      "updatedAt": "2026-09-25T12:00:00.000Z"
+    }
+  },
+  "code": 201,
+  "status": "CREATED"
+}
+```
+
+#### `GET /orders/my-orders` — compras do usuário (customer ou admin)
+
+Request:
+
+```http
+GET /orders/my-orders
+Authorization: Bearer <token-customer>
+```
+
+Response `200 OK` (formato atual):
+
+```json
+{
+  "success": true,
+  "message": "Operação concluída",
+  "data": {
+    "data": []
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+A lista é filtrada pelo ID do usuário autenticado.
+
+#### `GET /orders/my-sales` — vendas do usuário (seller ou admin)
+
+Request:
+
+```http
+GET /orders/my-sales
+Authorization: Bearer <token-seller>
+```
+
+Response `200 OK` (exemplo abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Operação concluída",
+  "data": {
+    "sales": [
+      {
+        "_id": "66f4b8f2c3a21a0012345680",
+        "customer": {
+          "_id": "66f4b8f2c3a21a0012345678",
+          "name": "Maria Silva",
+          "email": "maria@example.com"
+        },
+        "product": {
+          "_id": "66f4b8f2c3a21a0012345679",
+          "title": "Teclado Mecânico RGB",
+          "price": 299.9
+        },
+        "quantity": 2,
+        "totalAmount": 599.8,
+        "status": "pending"
+      }
+    ]
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `PATCH /orders/:id/cancel` — cancelar pedido (customer ou seller associado ao pedido)
+
+A rota exige autenticação. O service permite cancelar apenas se o usuário autenticado for o cliente ou o vendedor associado àquele pedido. O estoque do produto é devolvido.
+
+Request:
+
+```http
+PATCH /orders/66f4b8f2c3a21a0012345680/cancel
+Authorization: Bearer <token>
+```
+
+Response `200 OK` (formato atual, abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Pedido cancelado e estoque devolvido com sucesso!",
+  "data": {
+    "data": {
+      "_id": "66f4b8f2c3a21a0012345680",
+      "status": "canceled",
+      "quantity": 2,
+      "totalAmount": 599.8
+    }
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `PATCH /orders/:id/pay` — marcar pedido como pago (seller ou admin; vendedor dono da venda)
+
+O service exige que o pedido não esteja cancelado ou pago e verifica que o usuário é o vendedor associado. Apesar de `admin` passar pelo middleware de papel, a verificação de propriedade também é aplicada no service.
+
+Request:
+
+```http
+PATCH /orders/66f4b8f2c3a21a0012345680/pay
+Authorization: Bearer <token-seller>
+```
+
+Response `200 OK` (formato atual, abreviado):
+
+```json
+{
+  "success": true,
+  "message": "Pagamento do pedido atualizado com sucesso!",
+  "data": {
+    "data": {
+      "_id": "66f4b8f2c3a21a0012345680",
+      "status": "paid",
+      "quantity": 2,
+      "totalAmount": 599.8
+    }
+  },
+  "code": 200,
+  "status": "OK"
+}
+```
+
+#### `DELETE /orders/:id/delete` — excluir pedido cancelado (customer dono ou admin)
+
+Somente pedidos com status `canceled` podem ser removidos.
+
+Request:
+
+```http
+DELETE /orders/66f4b8f2c3a21a0012345680/delete
+Authorization: Bearer <token-customer>
+```
+
+Response `200 OK`:
+
+```json
+{
+  "success": true,
+  "message": "Pedido cancelado foi removido com sucesso!",
+  "code": 200,
+  "status": "OK"
+}
+```
+
+## Erros comuns
+
+- `400 Bad Request`: validação falhou, registro não encontrado ou regra de negócio não satisfeita.
+- `401 Unauthorized`: token ausente ou inválido.
+- `403 Forbidden`: usuário autenticado sem o papel ou a propriedade exigida.
+- `500 Internal Server Error`: erro inesperado no servidor.
+
+O middleware global de autenticação protege os grupos `/products` e `/orders`. O middleware de autorização verifica os papéis definidos em cada rota; os services também aplicam regras de propriedade para alterações e exclusões.
