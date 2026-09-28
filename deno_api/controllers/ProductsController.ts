@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import requestCheck from "request-check";
 import is from "@zarco/isness";
 import { ProductService } from "../services/ProductService.ts";
+import { UserModel } from "../models/User/User.ts";
 import { throwlhos } from "../globals/Throwlhos.ts";
 
 const rc = requestCheck.default();
@@ -39,9 +40,18 @@ class ProductsController {
         throw throwlhos.err_forbidden("Não autorizado.");
       }
 
+      const user = await UserModel.findById(req.user._id);
+      if (!user) {
+        throw throwlhos.err_forbidden("Usuário inexistente.");
+      }
+
       const productPayload = {
         ...req.body,
-        user: req.user._id,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+        },
       };
 
       const newProduct = await this.productService.createProduct(

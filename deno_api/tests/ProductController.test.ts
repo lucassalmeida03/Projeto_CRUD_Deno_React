@@ -69,6 +69,11 @@ Deno.test("should create a new product", async () => {
 
   assertEquals(result.code, 201);
   assertEquals(result.message, "Produto cadastrado com sucesso!");
+  const createdProduct = await ProductModel.findOne({ title: "Test Product" });
+  assertExists(createdProduct);
+  assertEquals(createdProduct.user._id.toString(), user._id.toString());
+  assertEquals(createdProduct.user.name, user.name);
+  assertEquals(createdProduct.user.email, user.email);
 });
 
 // CREATE - Negative - validação
@@ -98,6 +103,7 @@ Deno.test("should not create a new product - validation failure", async () => {
   assertEquals(result.message, "Erro de validação!");
 });
 
+
 // CREATE - Negative - autorização
 Deno.test("should not create a new product - authorization failure", async () => {
   const user = await UserModel.findOne({ email: testEmailCustomer });
@@ -117,6 +123,18 @@ Deno.test("should not create a new product - authorization failure", async () =>
       _id: "",
       role: user.role,
     },
+  } as unknown as Request;
+
+  const result = await productsController.create(MockRequest, MockResponser);
+
+  assertEquals(result.code, 400);
+  assertEquals(result.message, "Erro ao criar produto.");
+});
+
+Deno.test("should not create a product when the authenticated user is missing", async () => {
+  const MockRequest = {
+    body: { title: "Valid title", price: 10, stock: 5 },
+    user: { _id: new mongoose.Types.ObjectId().toString() },
   } as unknown as Request;
 
   const result = await productsController.create(MockRequest, MockResponser);
@@ -167,6 +185,9 @@ Deno.test("should get my products", async () => {
 
   assertEquals(result.code, 200);
   assertEquals(result.message, "Busca completa!");
+  const products = result.data?.products;
+  assertEquals(Array.isArray(products), true);
+  
 });
 
 // GETMYPRODUCTS - Negative - user id missing

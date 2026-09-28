@@ -1,5 +1,5 @@
 import { IBaseInterface } from "../../base/IBaseInterface.ts";
-import { Types } from "mongoose";
+import { Schema } from "mongoose";
 import { IProduct } from "../Product/IProduct.ts";
 
 export enum userRole {
@@ -13,5 +13,5 @@ export interface IUser extends IBaseInterface {
   email: string;
   password: string;
   role?: userRole;
-  products?: Types.ObjectId[] | IProduct[];
+  products?: Schema.Types.ObjectId[] | IProduct[];
 }

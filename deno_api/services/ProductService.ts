@@ -11,7 +11,7 @@ class ProductService {
 
     const newProduct = await ProductModel.create(productEntity);
 
-    await UserModel.findByIdAndUpdate(productData.user, {
+    await UserModel.findByIdAndUpdate(productData.user._id, {
       $push: { products: newProduct._id },
     });
 
@@ -19,12 +19,15 @@ class ProductService {
   }
 
   async getAllProducts(): Promise<IProduct[]> {
-    return await ProductModel.find().populate("user", "name email role");
+    return await ProductModel.find()
   }
 
   async findBySellerId(sellerId: string): Promise<IProduct[]> {
-    return await ProductModel.find({ user: sellerId })
-      .populate("user", "name email")
+    if (!isValidObjectId(sellerId)) {
+      throw throwlhos.err_badRequest("ID do vendedor inválido.");
+    }
+
+    return await ProductModel.find().where("user._id").equals(sellerId)
       .sort({ createdAt: -1 });
   }
 
@@ -49,8 +52,7 @@ class ProductService {
     }
 
     const ownerId = typeof product.user === "object" && "_id" in product.user
-      ? product.user._id.toString()
-      : product.user.toString();
+      ? product.user._id.toString() : ""
 
     const isOwner = ownerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;
@@ -61,10 +63,14 @@ class ProductService {
       );
     }
 
-    Object.assign(product, updateData);
+    for (const field of ["title", "description", "price", "stock"] as const) {
+      if (field in updateData) {
+        product.set(field, updateData[field]);
+      }
+    }
     await product.save();
 
-    return await product.populate("user", "name email role");
+    return product
   }
 
   async deleteProduct(
@@ -88,7 +94,7 @@ class ProductService {
 
     const ownerId = typeof product.user === "object" && "_id" in product.user
       ? product.user._id.toString()
-      : product.user.toString();
+      : ""
 
     const isOwner = ownerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;
@@ -101,7 +107,7 @@ class ProductService {
 
     await ProductModel.findByIdAndDelete(productId);
 
-    await UserModel.findByIdAndUpdate(userId, {
+    await UserModel.findByIdAndUpdate(ownerId, {
       $pull: { products: productId },
     });
   }

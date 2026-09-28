@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import { model, Schema } from "mongoose";
 import { IUser } from "./IUser.ts";
 
 export class UserClass implements IUser {
@@ -7,7 +7,7 @@ export class UserClass implements IUser {
   password: IUser["password"];
   role?: IUser["role"];
   products?: IUser["products"];
-  _id?: Types.ObjectId;
+  _id?: Schema.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -30,7 +30,7 @@ const UserSchema = new Schema<IUser>({
   role: { type: String, required: true },
   products: [
     {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Product",
     },
   ],

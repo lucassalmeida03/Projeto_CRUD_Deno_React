@@ -1,5 +1,5 @@
 import { IOrder } from "./IOrder.ts";
-import { model, Schema, Types } from "mongoose";
+import { model, Schema } from "mongoose";
 
 export class OrderClass implements IOrder {
   customer: IOrder["customer"];
@@ -8,7 +8,7 @@ export class OrderClass implements IOrder {
   totalAmount: IOrder["totalAmount"];
   quantity: IOrder["quantity"];
   status: IOrder["status"];
-  _id?: Types.ObjectId;
+  _id?: Schema.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -24,9 +24,21 @@ export class OrderClass implements IOrder {
 
 const OrderSchema = new Schema<IOrder>(
   {
-    customer: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
-    seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    customer: {
+      _id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+      email: { type: String, required: true },
+    },
+    product: {
+      _id: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+      title: { type: String, required: true },
+      price: { type: Number, required: true },
+    },
+    seller: {
+      _id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+      email: { type: String, required: true },
+    },
     totalAmount: { type: Number, required: true },
     quantity: {
       type: Number,

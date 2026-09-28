@@ -1,12 +1,15 @@
 # Deno Commerce API
 
-API REST para um sistema simples de e-commerce, desenvolvida com Deno, TypeScript, Express, Mongoose e MongoDB.
+API REST para um sistema simples de e-commerce, desenvolvida com Deno,
+TypeScript, Express, Mongoose e MongoDB.
 
 ## Requisitos
 
 - Deno 2.x instalado.
-- MongoDB acessível pela aplicação. Os testes também usam a conexão definida em `MONGODB_URI`.
-- Para criação de pedidos, MongoDB deve aceitar transações (por exemplo, MongoDB Atlas ou replica set local).
+- MongoDB acessível pela aplicação. Os testes também usam a conexão definida em
+  `MONGODB_URI`.
+- Para criação de pedidos, MongoDB deve aceitar transações (por exemplo, MongoDB
+  Atlas ou replica set local).
 
 ## Configuração
 
@@ -18,7 +21,8 @@ MONGODB_URI=mongodb+srv://<usuario>:<senha>@<cluster>/<banco>
 JWT_SECRET=uma_chave_secreta_longa
 ```
 
-Não versione `.env` nem compartilhe credenciais. O comando de desenvolvimento já permite ao Deno carregar variáveis do arquivo.
+Não versione `.env` nem compartilhe credenciais. O comando de desenvolvimento já
+permite ao Deno carregar variáveis do arquivo.
 
 ## Executar
 
@@ -28,7 +32,8 @@ A partir da pasta `deno_api`:
 deno task dev
 ```
 
-A API estará disponível em `http://localhost:3000` (ou na porta definida em `PORT`). O servidor conecta ao MongoDB antes de começar a escutar.
+A API estará disponível em `http://localhost:3000` (ou na porta definida em
+`PORT`). O servidor conecta ao MongoDB antes de começar a escutar.
 
 ## Testes
 
@@ -38,9 +43,12 @@ Execute todos os testes a partir da pasta `deno_api`:
 deno task test
 ```
 
-A task roda `deno test` com as permissões necessárias, executa os testes em `tests/` e produz relatórios de cobertura em `coverage/`.
+A task roda `deno test` com as permissões necessárias, executa os testes em
+`tests/` e produz relatórios de cobertura em `coverage/`.
 
-**Atenção:** a suíte conecta ao banco apontado por `MONGODB_URI`, cria e remove registros de teste e desconecta ao terminar. Configure uma base de dados exclusiva para testes; não use uma base com dados importantes.
+**Atenção:** a suíte conecta ao banco apontado por `MONGODB_URI`, cria e remove
+registros de teste e desconecta ao terminar. Configure uma base de dados
+exclusiva para testes; não use uma base com dados importantes.
 
 Para exibir detalhes da cobertura depois dos testes:
 
@@ -50,17 +58,25 @@ deno task test-coverage-detailed
 
 ## Autenticação e respostas
 
-As rotas de cadastro (`POST /users`) e login (`POST /sessions`) são públicas. As demais rotas exigem um JWT no cabeçalho:
+As rotas de cadastro (`POST /users`) e login (`POST /sessions`) são públicas. As
+demais rotas exigem um JWT no cabeçalho:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-Papéis usados pela aplicação: `customer`, `seller` e `admin`. Uma rota pode exigir papel e também aplicar regras de propriedade do recurso, como permitir que apenas o dono de um produto o altere.
+Papéis usados pela aplicação: `customer`, `seller` e `admin`. Uma rota pode
+exigir papel e também aplicar regras de propriedade do recurso, como permitir
+que apenas o dono de um produto o altere.
 
-Respostas de sucesso seguem o envelope do `responser`, normalmente com `success`, `message`, `data`, `code` e `status`. O conteúdo de `data` varia por endpoint. Em algumas rotas, o controller também passa um objeto com uma propriedade `data`, produzindo `data.data`; os exemplos abaixo registram o formato atual, inclusive esse aninhamento.
+Respostas de sucesso seguem o envelope do `responser`, normalmente com
+`success`, `message`, `data`, `code` e `status`. O conteúdo de `data` varia por
+endpoint. Em algumas rotas, o controller também passa um objeto com uma
+propriedade `data`, produzindo `data.data`; os exemplos abaixo registram o
+formato atual, inclusive esse aninhamento.
 
-Exemplos usam `http://localhost:3000`. Substitua IDs e o token pelos valores retornados pela sua instalação.
+Exemplos usam `http://localhost:3000`. Substitua IDs e o token pelos valores
+retornados pela sua instalação.
 
 ## Rotas
 
@@ -108,7 +124,10 @@ A senha não é incluída na resposta de login.
 
 #### `POST /users` — cadastro (pública)
 
-`role` é opcional e o controller usa `customer` quando omitido. O endpoint atualmente aceita `role` informado no corpo; por segurança, não permita que clientes escolham `seller` ou `admin` em uma aplicação pública sem uma regra de autorização no servidor.
+`role` é opcional e o controller usa `customer` quando omitido. O endpoint
+atualmente aceita `role` informado no corpo; por segurança, não permita que
+clientes escolham `seller` ou `admin` em uma aplicação pública sem uma regra de
+autorização no servidor.
 
 Request:
 
@@ -147,7 +166,9 @@ Response `201 Created` (exemplo abreviado):
 }
 ```
 
-**Atenção:** o controller atual inclui o hash da senha no objeto retornado pelo cadastro. Embora não seja a senha original, esse hash não deve ser exposto; o backend deve removê-lo antes de responder.
+**Atenção:** o controller atual inclui o hash da senha no objeto retornado pelo
+cadastro. Embora não seja a senha original, esse hash não deve ser exposto; o
+backend deve removê-lo antes de responder.
 
 #### `GET /users` — listar usuários (admin)
 
@@ -203,7 +224,8 @@ Response `200 OK`:
 
 #### `POST /products` — criar produto (seller ou admin)
 
-O `user` do produto é definido pelo usuário autenticado. Não envie esse campo no body.
+O `user` do produto é definido pelo usuário autenticado. Não envie esse campo no
+body.
 
 Request:
 
@@ -245,7 +267,8 @@ Response `201 Created` (formato atual, abreviado):
 }
 ```
 
-O objeto `data.data` é aninhado porque o controller passa `{ data: newProduct }` para o `responser`.
+O objeto `data.data` é aninhado porque o controller passa `{ data: newProduct }`
+para o `responser`.
 
 #### `GET /products` — catálogo (customer ou admin)
 
@@ -385,13 +408,16 @@ Response `200 OK`:
 }
 ```
 
-O controller atualmente passa um objeto como primeiro argumento de `send_ok`; por isso o campo `message` pode conter um objeto. Esse formato é inconsistente com as outras respostas.
+O controller atualmente passa um objeto como primeiro argumento de `send_ok`;
+por isso o campo `message` pode conter um objeto. Esse formato é inconsistente
+com as outras respostas.
 
 ### Pedidos
 
 #### `POST /orders` — criar pedido (customer ou admin)
 
-O pedido é criado para o usuário autenticado. O estoque é validado e reduzido durante a operação. `quantity` é opcional e assume `1`.
+O pedido é criado para o usuário autenticado. O estoque é validado e reduzido
+durante a operação. `quantity` é opcional e assume `1`.
 
 Request:
 
@@ -511,7 +537,9 @@ Response `200 OK` (exemplo abreviado):
 
 #### `PATCH /orders/:id/cancel` — cancelar pedido (customer ou seller associado ao pedido)
 
-A rota exige autenticação. O service permite cancelar apenas se o usuário autenticado for o cliente ou o vendedor associado àquele pedido. O estoque do produto é devolvido.
+A rota exige autenticação. O service permite cancelar apenas se o usuário
+autenticado for o cliente ou o vendedor associado àquele pedido. O estoque do
+produto é devolvido.
 
 Request:
 
@@ -541,7 +569,9 @@ Response `200 OK` (formato atual, abreviado):
 
 #### `PATCH /orders/:id/pay` — marcar pedido como pago (seller ou admin; vendedor dono da venda)
 
-O service exige que o pedido não esteja cancelado ou pago e verifica que o usuário é o vendedor associado. Apesar de `admin` passar pelo middleware de papel, a verificação de propriedade também é aplicada no service.
+O service exige que o pedido não esteja cancelado ou pago e verifica que o
+usuário é o vendedor associado. Apesar de `admin` passar pelo middleware de
+papel, a verificação de propriedade também é aplicada no service.
 
 Request:
 
@@ -593,9 +623,12 @@ Response `200 OK`:
 
 ## Erros comuns
 
-- `400 Bad Request`: validação falhou, registro não encontrado ou regra de negócio não satisfeita.
+- `400 Bad Request`: validação falhou, registro não encontrado ou regra de
+  negócio não satisfeita.
 - `401 Unauthorized`: token ausente ou inválido.
 - `403 Forbidden`: usuário autenticado sem o papel ou a propriedade exigida.
 - `500 Internal Server Error`: erro inesperado no servidor.
 
-O middleware global de autenticação protege os grupos `/products` e `/orders`. O middleware de autorização verifica os papéis definidos em cada rota; os services também aplicam regras de propriedade para alterações e exclusões.
+O middleware global de autenticação protege os grupos `/products` e `/orders`. O
+middleware de autorização verifica os papéis definidos em cada rota; os services
+também aplicam regras de propriedade para alterações e exclusões.

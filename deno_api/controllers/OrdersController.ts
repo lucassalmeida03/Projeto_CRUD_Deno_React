@@ -14,6 +14,10 @@ class OrdersController {
       const customerId = req.user._id;
       const { productId, quantity = 1 } = req.body;
 
+      if (!customerId) {
+        throw throwlhos.err_forbidden("Não autorizado.");
+      }
+
       const order = await this.orderService.createSimpleOrder(
         customerId,
         productId,

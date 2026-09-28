@@ -48,8 +48,8 @@ Deno.test.beforeAll(async () => {
 Deno.test.afterAll(async () => {
   await OrderModel.deleteMany({
     $or: [
-      { customer: { $in: await getTestUserIds() } },
-      { seller: { $in: await getTestUserIds() } },
+      { "customer._id": { $in: await getTestUserIds() } },
+      { "seller._id": { $in: await getTestUserIds() } },
     ],
   });
   await ProductModel.deleteOne({ title: "Order Test Product" });
@@ -91,7 +91,7 @@ Deno.test("should create an order successfully", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const MockRequest = {
@@ -136,7 +136,7 @@ Deno.test("should not create an order - insufficient stock", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const MockRequest = {
@@ -172,7 +172,7 @@ Deno.test("should not create an order - missing user id", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const MockRequest = {
@@ -285,13 +285,13 @@ Deno.test("should cancel an order successfully", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "pending",
@@ -347,13 +347,13 @@ Deno.test("should not cancel an order - authorization failure", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "pending",
@@ -397,13 +397,13 @@ Deno.test("should mark an order as paid successfully", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "pending",
@@ -447,13 +447,13 @@ Deno.test("should not mark an order as paid - authorization failure", async () =
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "pending",
@@ -497,13 +497,13 @@ Deno.test("should delete a canceled order successfully", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "canceled",
@@ -556,13 +556,13 @@ Deno.test("should not delete an order - authorization failure", async () => {
       price: 50,
       stock: 10,
       description: "Product used for order tests.",
-      user: seller._id,
+      user: { _id: seller._id, name: seller.name, email: seller.email },
     });
 
   const order = await OrderModel.create({
-    customer: customer._id,
-    product: product._id,
-    seller: seller._id,
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
     totalAmount: product.price,
     quantity: 1,
     status: "canceled",
