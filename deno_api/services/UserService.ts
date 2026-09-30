@@ -30,7 +30,7 @@ class UserService {
     return newUser;
   }
 
-  async getAllUsers(userRoleRequest: string) {
+  async getAllUsers(userRoleRequest: string, page: number, limit: number) {
     const isAdmin = userRoleRequest === userRole.ADMIN;
 
     if (!isAdmin) {
@@ -39,13 +39,25 @@ class UserService {
       );
     }
 
-    const users = await UserModel.find().populate("products").exec();
+    const [users, totalUsers] = await Promise.all([
+      UserModel.find()
+        .populate("products")
+        .sort({ _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      UserModel.countDocuments(),
+    ]);
 
-    if (!users) {
-      throw throwlhos.err_badRequest("Nenhum usuário encontrado.");
-    }
-
-    return users;
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        totalUsers,
+        totalPages: Math.ceil(totalUsers / limit),
+      },
+    };
   }
 
   // Usado para buscar usuário no banco para iniciar sessão

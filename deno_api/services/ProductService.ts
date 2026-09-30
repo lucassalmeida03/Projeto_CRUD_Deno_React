@@ -18,8 +18,24 @@ class ProductService {
     return newProduct;
   }
 
-  async getAllProducts(): Promise<IProduct[]> {
-    return await ProductModel.find()
+  async getAllProducts(page: number, limit: number) {
+    const [products, totalProducts] = await Promise.all([
+      ProductModel.find()
+        .sort({ createdAt: -1, _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      ProductModel.countDocuments(),
+    ]);
+
+    return {
+      products,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    };
   }
 
   async findBySellerId(sellerId: string): Promise<IProduct[]> {

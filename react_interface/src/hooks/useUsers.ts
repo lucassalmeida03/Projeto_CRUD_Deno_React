@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { deleteUser, getUsers } from '../services/userService';
+import type { UserPagination } from '../services/userService';
 import type { User } from '../types/User';
+
+const PAGE_SIZE = 7;
 
 interface UserError {
   response?: { data?: { message?: string } };
@@ -12,25 +15,45 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<UserPagination>({
+    page: 1,
+    limit: PAGE_SIZE,
+    totalPages: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    let isCurrentRequest = true;
+
     async function loadUsers() {
+      setIsLoading(true);
+      setErrorMessage('');
+
       try {
-        setUsers(await getUsers());
+        const result = await getUsers(page, PAGE_SIZE);
+        if (isCurrentRequest) {
+          setUsers(result.users);
+          setPagination(result.pagination);
+        }
       } catch (error) {
-        setErrorMessage(
-          getErrorMessage(error, 'Não foi possível carregar os usuários.')
-        );
+        if (isCurrentRequest) {
+          setErrorMessage(
+            getErrorMessage(error, 'Não foi possível carregar os usuários.')
+          );
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrentRequest) setIsLoading(false);
       }
     }
 
     void loadUsers();
-  }, []);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [page]);
 
   async function removeUser(user: User) {
     if (
@@ -43,9 +66,13 @@ export function useUsers() {
 
     try {
       await deleteUser(user._id);
-      setUsers((current) =>
-        current.filter((currentUser) => currentUser._id !== user._id)
-      );
+      if (users.length === 1 && page > 1) {
+        setPage((currentPage) => currentPage - 1);
+      } else {
+        const result = await getUsers(page, PAGE_SIZE);
+        setUsers(result.users);
+        setPagination(result.pagination);
+      }
     } catch (error) {
       setErrorMessage(
         getErrorMessage(error, 'Não foi possível remover o usuário.')
@@ -55,5 +82,14 @@ export function useUsers() {
     }
   }
 
-  return { users, isLoading, deletingUserId, errorMessage, removeUser };
+  return {
+    users,
+    page,
+    setPage,
+    pagination,
+    isLoading,
+    deletingUserId,
+    errorMessage,
+    removeUser,
+  };
 }

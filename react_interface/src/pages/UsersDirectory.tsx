@@ -3,8 +3,16 @@ import { Header } from '../components/Header';
 import { useUsers } from '../hooks/useUsers';
 
 export function UsersDirectory() {
-  const { users, isLoading, deletingUserId, errorMessage, removeUser } =
-    useUsers();
+  const {
+    users,
+    page,
+    setPage,
+    pagination,
+    isLoading,
+    deletingUserId,
+    errorMessage,
+    removeUser,
+  } = useUsers();
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans flex flex-col">
@@ -81,6 +89,28 @@ export function UsersDirectory() {
               );
             })}
           </div>
+
+          {!isLoading && pagination.totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-xl mx-auto mt-8 pt-6 border-t border-gray-100">
+              <Button
+                className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => setPage(page - 1)}
+                disabled={page <= 1}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm text-gray-500 text-center" aria-live="polite">
+                Página {page} de {pagination.totalPages} 
+              </span>
+              <Button
+                className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => setPage(page + 1)}
+                disabled={page >= pagination.totalPages}
+              >
+                Próxima
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -5,9 +5,22 @@ export async function createUser(userData: CreateUserData) {
   return api.post('/users', userData);
 }
 
-export async function getUsers(): Promise<User[]> {
-  const response = await api.get<{ data: { users: User[] } }>('/users');
-  return response.data.data.users;
+export interface UserPagination {
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface UserPage {
+  users: User[];
+  pagination: UserPagination;
+}
+
+export async function getUsers(page = 1, limit = 7): Promise<UserPage> {
+  const response = await api.get<{ data: UserPage }>('/users', {
+    params: { page, limit },
+  });
+  return response.data.data;
 }
 
 export async function deleteUser(userId: string): Promise<void> {

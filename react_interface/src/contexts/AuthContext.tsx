@@ -18,16 +18,17 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 );
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
+  
+  const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const storedUser = localStorage.getItem(USER_KEY);
+    const storedUser = sessionStorage.getItem(USER_KEY);
 
     if (!storedUser) return null;
 
     try {
       return JSON.parse(storedUser) as AuthUser;
     } catch {
-      localStorage.removeItem(USER_KEY);
+      sessionStorage.removeItem(USER_KEY);
       return null;
     }
   });
@@ -35,15 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(loginData: LoginData) {
     const session = await createSession(loginData);
 
-    localStorage.setItem(TOKEN_KEY, session.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+    sessionStorage.setItem(TOKEN_KEY, session.token);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(session.user));
     setToken(session.token);
     setUser(session.user);
   }
 
   function logout() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
     setToken(null);
     setUser(null);
   }

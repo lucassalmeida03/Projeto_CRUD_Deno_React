@@ -11,6 +11,17 @@ export async function createProduct(
   return response.data.data.data;
 }
 
+export interface ProductPagination {
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ProductPage {
+  products: Product[];
+  pagination: ProductPagination;
+}
+
 export async function getMyProducts(): Promise<Product[]> {
   const response = await api.get<{ data: { products: Product[] } }>(
     '/products/my-products'
@@ -18,11 +29,11 @@ export async function getMyProducts(): Promise<Product[]> {
   return response.data.data.products;
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const response = await api.get<{ data: { products: Product[] } }>(
-    '/products'
-  );
-  return response.data.data.products;
+export async function getProducts(page = 1, limit = 12): Promise<ProductPage> {
+  const response = await api.get<{ data: ProductPage }>('/products', {
+    params: { page, limit },
+  });
+  return response.data.data;
 }
 
 export async function deleteProduct(productId: string): Promise<void> {

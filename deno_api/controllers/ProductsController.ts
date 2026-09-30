@@ -66,10 +66,19 @@ class ProductsController {
     }
   };
 
-  getAll = async (_req: Request, res: Response) => {
+  getAll = async (req: Request, res: Response) => {
     try {
-      const products = await this.productService.getAllProducts();
-      return res.send_ok("Lista de produtos completa:", { products });
+      const requestedPage = Number(req.query?.page);
+      const requestedLimit = Number(req.query?.limit);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0
+        ? requestedPage
+        : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 12)
+        : 12;
+
+      const result = await this.productService.getAllProducts(page, limit);
+      return res.send_ok("Lista de produtos:", result);
     } catch (error) {
       return res.send_badRequest("Erro ao listar produtos.", { error });
     }

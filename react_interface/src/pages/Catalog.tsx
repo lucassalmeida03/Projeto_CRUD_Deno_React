@@ -8,6 +8,8 @@ import type { Product } from '../types/Product';
 import { formatCurrency } from '../utils/formatCurrency';
 import { useCreateOrder } from '../hooks/useCreateOrder';
 
+const PAGE_SIZE = 12;
+
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -134,6 +136,8 @@ export function CreateOrderModal({
 export function Catalog() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,18 +149,32 @@ export function Catalog() {
   } = useCreateOrder();
 
   useEffect(() => {
+    let isCurrentRequest = true;
+
     async function loadProducts() {
+      setIsLoading(true);
+      setErrorMessage('');
+
       try {
-        setProducts(await getProducts());
+        const result = await getProducts(page, PAGE_SIZE);
+        if (isCurrentRequest) {
+          setProducts(result.products);
+          setTotalPages(result.pagination.totalPages);
+        }
       } catch {
-        setErrorMessage('Não foi possível carregar o catálogo.');
+        if (isCurrentRequest) {
+          setErrorMessage('Não foi possível carregar o catálogo.');
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrentRequest) setIsLoading(false);
       }
     }
 
     void loadProducts();
-  }, []);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [page]);
 
   if (!user) return null;
 
@@ -235,19 +253,41 @@ export function Catalog() {
                   </div>
                 </div>
                 <Button
-                  className="w-32"
+                  className="w-20 h-10"
                   disabled={product.stock < 1}
                   onClick={() => {
                     setSelectedProduct(product);
                     setIsModalOpen(true);
                   }}
                 >
-                  Fazer Pedido
+                  Pedir
                 </Button>
               </div>
             </div>
           ))}
         </div>
+
+        {!isLoading && totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-3xl mx-auto mt-8 pt-6 border-t border-gray-200">
+            <Button
+              className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => setPage((currentPage) => currentPage - 1)}
+              disabled={page <= 1}
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-gray-500 text-center" aria-live="polite">
+              Página {page} de {totalPages}
+            </span>
+            <Button
+              className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => setPage((currentPage) => currentPage + 1)}
+              disabled={page >= totalPages}
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
       </main>
 
       {selectedProduct && (

@@ -66,8 +66,21 @@ class usersController {
 
   getAll = async (req: Request, res: Response) => {
     try {
-      const users = await this.userService.getAllUsers(req.user.role);
-      return res.send_ok("Usuarios encontrados:", { users });
+      const requestedPage = Number(req.query.page);
+      const requestedLimit = Number(req.query.limit);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0
+        ? requestedPage
+        : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 7)
+        : 7;
+
+      const result = await this.userService.getAllUsers(
+        req.user.role,
+        page,
+        limit,
+      );
+      return res.send_ok("Usuarios encontrados:", result);
     } catch (error) {
       return res.send_badRequest("Não foi possível buscar todos os usuários", {
         error,
