@@ -228,8 +228,9 @@ export function Catalog() {
             >
               <div>
                 <div className="flex items-center space-x-1.5 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500" />
-                  <span className="text-[11px] font-bold text-cyan-600 uppercase tracking-wide">
+                  <span
+                    className={`${product.stock < 5 ? 'text-[11px] font-bold text-red-600 uppercase tracking-wide' : 'text-[11px] font-bold text-cyan-600 uppercase tracking-wide'}`}
+                  >
                     {product.stock} em estoque
                   </span>
                 </div>
@@ -252,16 +253,20 @@ export function Catalog() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  className="w-20 h-10"
-                  disabled={product.stock < 1}
-                  onClick={() => {
-                    setSelectedProduct(product);
-                    setIsModalOpen(true);
-                  }}
-                >
-                  Pedir
-                </Button>
+                {user.role === 'admin' ? (
+                  <div></div>
+                ) : (
+                  <Button
+                    className="w-20 h-10"
+                    disabled={product.stock < 1}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    Pedir
+                  </Button>
+                )}
               </div>
             </div>
           ))}
@@ -276,7 +281,10 @@ export function Catalog() {
             >
               Anterior
             </Button>
-            <span className="text-sm text-gray-500 text-center" aria-live="polite">
+            <span
+              className="text-sm text-gray-500 text-center"
+              aria-live="polite"
+            >
               Página {page} de {totalPages}
             </span>
             <Button

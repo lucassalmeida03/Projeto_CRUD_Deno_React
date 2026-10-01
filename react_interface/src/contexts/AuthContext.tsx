@@ -18,7 +18,6 @@ export const AuthContext = createContext<AuthContextValue | undefined>(
 );
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<AuthUser | null>(() => {
     const storedUser = sessionStorage.getItem(USER_KEY);

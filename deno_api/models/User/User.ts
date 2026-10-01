@@ -6,7 +6,6 @@ export class UserClass implements IUser {
   email: IUser["email"];
   password: IUser["password"];
   role?: IUser["role"];
-  products?: IUser["products"];
   _id?: Schema.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -16,7 +15,6 @@ export class UserClass implements IUser {
     this.email = user.email;
     this.password = user.password;
     this.role = user.role;
-    this.products = user.products;
     this._id = user._id;
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
@@ -28,13 +26,8 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },
   role: { type: String, required: true },
-  products: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Product",
-    },
-  ],
-}, {
+},
+{
   timestamps: true,
 });
 

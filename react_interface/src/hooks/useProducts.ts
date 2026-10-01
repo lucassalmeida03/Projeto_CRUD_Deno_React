@@ -5,7 +5,10 @@ import {
   getMyProducts,
   updateProduct,
 } from '../services/productService';
+import type { ProductPagination } from '../services/productService';
 import type { CreateProduct, Product } from '../types/Product';
+
+const PAGE_SIZE = 12;
 
 interface ProductError {
   response?: {
@@ -21,6 +24,12 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<ProductPagination>({
+    page: 1,
+    limit: PAGE_SIZE,
+    totalPages: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(
     null
@@ -28,20 +37,34 @@ export function useProducts() {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    let isCurrentRequest = true;
+
     async function loadProducts() {
+      setIsLoading(true);
+      setErrorMessage('');
+
       try {
-        setProducts(await getMyProducts());
+        const result = await getMyProducts(page, PAGE_SIZE);
+        if (isCurrentRequest) {
+          setProducts(result.products);
+          setPagination(result.pagination);
+        }
       } catch (error) {
-        setErrorMessage(
-          getErrorMessage(error, 'Não foi possível carregar seus produtos.')
-        );
+        if (isCurrentRequest) {
+          setErrorMessage(
+            getErrorMessage(error, 'Não foi possível carregar seus produtos.')
+          );
+        }
       } finally {
-        setIsLoading(false);
+        if (isCurrentRequest) setIsLoading(false);
       }
     }
 
     void loadProducts();
-  }, []);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [page]);
 
   async function saveProduct(productData: CreateProduct, productId?: string) {
     setErrorMessage('');
@@ -58,6 +81,16 @@ export function useProducts() {
           (product._id ?? product.id) === productId ? savedProduct : product
         );
       });
+
+      if (!productId) {
+        if (page !== 1) {
+          setPage(1);
+        } else {
+          const result = await getMyProducts(1, PAGE_SIZE);
+          setProducts(result.products);
+          setPagination(result.pagination);
+        }
+      }
 
       return savedProduct;
     } catch (error) {
@@ -84,12 +117,13 @@ export function useProducts() {
 
     try {
       await deleteProduct(productId);
-      setProducts((current) =>
-        current.filter(
-          (currentProduct) =>
-            (currentProduct._id ?? currentProduct.id) !== productId
-        )
-      );
+      if (products.length === 1 && page > 1) {
+        setPage((currentPage) => currentPage - 1);
+      } else {
+        const result = await getMyProducts(page, PAGE_SIZE);
+        setProducts(result.products);
+        setPagination(result.pagination);
+      }
     } catch (error) {
       setErrorMessage(
         getErrorMessage(error, 'Não foi possível excluir o produto.')
@@ -101,6 +135,9 @@ export function useProducts() {
 
   return {
     products,
+    page,
+    setPage,
+    pagination,
     isLoading,
     deletingProductId,
     errorMessage,

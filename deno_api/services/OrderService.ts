@@ -11,6 +11,7 @@ import { UserModel } from "../models/User/User.ts";
 export class OrderService {
   async createSimpleOrder(
     customerId: Types.ObjectId,
+    customerRole: userRole,
     productId: string,
     quantity: number = 1,
   ): Promise<IOrder> {
@@ -29,10 +30,19 @@ export class OrderService {
         throw throwlhos.err_badRequest("Cliente não encontrado no sistema.");
       }
 
+      const seller = await UserModel.findById(product.seller).session(session);
+      if (!seller) {
+        throw throwlhos.err_badRequest("Vendedor não encontrado no sistema.");
+      }
+
       if (product.stock < quantity) {
         throw throwlhos.err_badRequest(
           `Estoque insuficiente. Apenas ${product.stock} unidade(s) disponível(is).`,
         );
+      }
+
+      if(customerRole === userRole.ADMIN){
+        throw throwlhos.err_badRequest("Usuário Administrador não tem permissão para realizar pedidos.");
       }
 
       product.stock -= quantity;
@@ -49,7 +59,11 @@ export class OrderService {
           title: product.title,
           price: product.price,
         },
-        seller: product.user,
+        seller: {
+          _id: seller._id,
+          name: seller.name,
+          email: seller.email,
+        },
         totalAmount: product.price * quantity,
         quantity: quantity,
         status: "pending",
@@ -69,14 +83,46 @@ export class OrderService {
     }
   }
 
-  async getOrders(customerId: string): Promise<IOrder[]> {
-    return await OrderModel.find().where("customer._id").equals(customerId)
-      .sort({ createdAt: -1 });
+  async getOrders(customerId: string, page: number, limit: number) {
+    const filter = { "customer._id": customerId };
+    const [orders, totalOrders] = await Promise.all([
+      OrderModel.find(filter)
+        .sort({ createdAt: -1, _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      OrderModel.countDocuments(filter),
+    ]);
+
+    return {
+      orders,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalOrders / limit),
+      },
+    };
   }
 
-  async getSales(sellerId: string): Promise<IOrder[]> {
-    return await OrderModel.find().where("seller._id").equals(sellerId)
-      .sort({ createdAt: -1 });
+  async getSales(sellerId: string, page: number, limit: number) {
+    const filter = { "seller._id": sellerId };
+    const [sales, totalSales] = await Promise.all([
+      OrderModel.find(filter)
+        .sort({ createdAt: -1, _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      OrderModel.countDocuments(filter),
+    ]);
+
+    return {
+      sales,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalSales / limit),
+      },
+    };
   }
 
   async cancelOrder(orderId: string, userId: string) {

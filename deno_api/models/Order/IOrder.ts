@@ -5,7 +5,7 @@ export type OrderStatus = "pending" | "paid" | "canceled";
 
 export interface IOrder extends IBaseInterface {
   customer: {
-    _id: Schema.Types.ObjectId;
+    _id: Schema.Types.ObjectId | string;
     name: string;
     email: string;
   };
@@ -15,7 +15,7 @@ export interface IOrder extends IBaseInterface {
     price: number;
   };
   seller: {
-    _id: Schema.Types.ObjectId;
+    _id: Schema.Types.ObjectId | string;
     name: string;
     email: string;
   };

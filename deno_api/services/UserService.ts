@@ -21,12 +21,6 @@ class UserService {
 
     const newUser = await UserModel.create(userEntity);
 
-    if (newUser.role === "customer") {
-      newUser.set("products", undefined);
-    }
-
-    await newUser.save();
-
     return newUser;
   }
 
@@ -41,7 +35,6 @@ class UserService {
 
     const [users, totalUsers] = await Promise.all([
       UserModel.find()
-        .populate("products")
         .sort({ _id: 1 })
         .skip((page - 1) * limit)
         .limit(limit)

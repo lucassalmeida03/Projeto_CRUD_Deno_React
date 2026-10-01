@@ -25,6 +25,9 @@ function getProductTitle(product: Order['product']) {
 export function CustomerOrders() {
   const {
     orders,
+    page,
+    setPage,
+    pagination,
     isLoading,
     processingOrderId,
     errorMessage,
@@ -75,6 +78,7 @@ export function CustomerOrders() {
                 const orderId = getOrderId(order);
                 const isPending = order.status === 'pending';
                 const isCanceled = order.status === 'canceled';
+                const isPaid = order.status === 'paid';
                 const isProcessing = processingOrderId === orderId;
 
                 return (
@@ -164,10 +168,41 @@ export function CustomerOrders() {
                           Excluir
                         </Button>
                       )}
+
+                      {isPaid && (
+                        <span className="text-xs font-semibold text-gray-400">
+                          Liquidado
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {!isLoading && pagination.totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-8 pt-6 border-t border-gray-100">
+              <Button
+                className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => setPage((currentPage) => currentPage - 1)}
+                disabled={page <= 1}
+              >
+                Anterior
+              </Button>
+              <span
+                className="text-sm text-gray-500 text-center"
+                aria-live="polite"
+              >
+                Página {page} de {pagination.totalPages}
+              </span>
+              <Button
+                className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => setPage((currentPage) => currentPage + 1)}
+                disabled={page >= pagination.totalPages}
+              >
+                Próxima
+              </Button>
             </div>
           )}
         </div>

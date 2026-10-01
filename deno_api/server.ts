@@ -18,18 +18,23 @@ app.use(responser.default);
 app.use(routes);
 
 // Verifica se o erro é do tipo throwlhos.
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  if (err && typeof err.code === "number") {
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    typeof err.code === "number"
+  ) {
     return res.status(err.code).json(err);
   }
 
   return res.status(500).json({
     code: 500,
     status: "INTERNAL_SERVER_ERROR",
-    message: err.message || "Erro interno do servidor",
+    message: err instanceof Error ? err.message : "Erro interno do servidor",
   });
+  
 });
-
 await connectDB();
 
 app.listen(PORT, () => {

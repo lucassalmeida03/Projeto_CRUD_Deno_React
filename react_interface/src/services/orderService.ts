@@ -9,18 +9,38 @@ export async function createOrder(orderData: CreateOrderData): Promise<Order> {
   return response.data.data.data;
 }
 
-export async function getSales(): Promise<Order[]> {
-  const response = await api.get<{ data: { sales: Order[] } }>(
-    '/orders/my-sales'
-  );
-  return response.data.data.sales;
+export interface SalesPage {
+  sales: Order[];
+  pagination: OrderPagination;
 }
 
-export async function getCustomerOrders(): Promise<Order[]> {
-  const response = await api.get<{ data: { data: Order[] } }>(
-    '/orders/my-orders'
+export async function getSales(page = 1, limit = 7): Promise<SalesPage> {
+  const response = await api.get<{ data: SalesPage }>('/orders/my-sales', {
+    params: { page, limit },
+  });
+  return response.data.data;
+}
+
+export interface OrderPagination {
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface CustomerOrdersPage {
+  orders: Order[];
+  pagination: OrderPagination;
+}
+
+export async function getCustomerOrders(
+  page = 1,
+  limit = 7
+): Promise<CustomerOrdersPage> {
+  const response = await api.get<{ data: CustomerOrdersPage }>(
+    '/orders/my-orders',
+    { params: { page, limit } }
   );
-  return response.data.data.data;
+  return response.data.data;
 }
 
 export async function cancelOrder(orderId: string): Promise<Order> {
@@ -40,3 +60,4 @@ export async function markOrderAsPaid(orderId: string): Promise<Order> {
   );
   return response.data.data.data;
 }
+

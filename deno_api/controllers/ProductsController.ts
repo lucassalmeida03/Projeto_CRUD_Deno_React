@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import requestCheck from "request-check";
 import is from "@zarco/isness";
 import { ProductService } from "../services/ProductService.ts";
-import { UserModel } from "../models/User/User.ts";
 import { throwlhos } from "../globals/Throwlhos.ts";
 
 const rc = requestCheck.default();
@@ -36,22 +35,14 @@ class ProductsController {
         return res.send_badRequest("Erro de validação!", { errors });
       }
 
-      if (!req.user._id) {
+      const seller_id = req.user._id
+      if (!seller_id) {
         throw throwlhos.err_forbidden("Não autorizado.");
-      }
-
-      const user = await UserModel.findById(req.user._id);
-      if (!user) {
-        throw throwlhos.err_forbidden("Usuário inexistente.");
       }
 
       const productPayload = {
         ...req.body,
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-        },
+        seller: seller_id
       };
 
       const newProduct = await this.productService.createProduct(
@@ -92,9 +83,22 @@ class ProductsController {
         return res.send_badRequest("ID do vendedor não fornecido.");
       }
 
-      const products = await this.productService.findBySellerId(sellerId);
+      const requestedPage = Number(req.query?.page);
+      const requestedLimit = Number(req.query?.limit);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0
+        ? requestedPage
+        : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 12)
+        : 12;
 
-      return res.send_ok("Busca completa!", { products });
+      const result = await this.productService.findBySellerId(
+        sellerId,
+        page,
+        limit,
+      );
+
+      return res.send_ok("Busca completa!", result);
     } catch (error) {
       return res.send_badRequest("Erro ao buscar produtos do vendedor.", {
         error,

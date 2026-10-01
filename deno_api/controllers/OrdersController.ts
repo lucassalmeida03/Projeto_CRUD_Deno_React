@@ -12,6 +12,7 @@ class OrdersController {
   create = async (req: Request, res: Response) => {
     try {
       const customerId = req.user._id;
+      const customerRole = req.user.role
       const { productId, quantity = 1 } = req.body;
 
       if (!customerId) {
@@ -20,8 +21,9 @@ class OrdersController {
 
       const order = await this.orderService.createSimpleOrder(
         customerId,
+        customerRole,
         productId,
-        Number(quantity),
+        quantity,
       );
 
       return res.send_created("Produto adquirido com sucesso!", {
@@ -40,9 +42,22 @@ class OrdersController {
         throw throwlhos.err_badRequest("User sem ID especificado.");
       }
 
-      const orders = await this.orderService.getOrders(customerId);
+      const requestedPage = Number(req.query.page);
+      const requestedLimit = Number(req.query.limit);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0
+        ? requestedPage
+        : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 7)
+        : 7;
 
-      return res.send_ok("Operação concluída", { data: orders });
+      const result = await this.orderService.getOrders(
+        customerId,
+        page,
+        limit,
+      );
+
+      return res.send_ok("Operação concluída", result);
     } catch (error) {
       return res.send_badRequest("Erro ao buscar histórico de compras.", error);
     }
@@ -55,9 +70,19 @@ class OrdersController {
       if (!req.user._id) {
         throw throwlhos.err_badRequest("User sem ID especificado.");
       }
-      const sales = await this.orderService.getSales(sellerId);
 
-      return res.send_ok("Operação concluída", { sales });
+      const requestedPage = Number(req.query.page);
+      const requestedLimit = Number(req.query.limit);
+      const page = Number.isInteger(requestedPage) && requestedPage > 0
+        ? requestedPage
+        : 1;
+      const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 7)
+        : 7;
+
+      const result = await this.orderService.getSales(sellerId, page, limit);
+
+      return res.send_ok("Operação concluída", result);
     } catch (error) {
       return res.send_badRequest("Erro ao buscar histórico de vendas.", error);
     }

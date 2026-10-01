@@ -6,7 +6,7 @@ export class ProductClass implements IProduct {
   description?: IProduct["description"];
   price: IProduct["price"];
   stock: IProduct["stock"];
-  user: IProduct["user"];
+  seller: IProduct["seller"];
   _id?: Schema.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,7 +17,7 @@ export class ProductClass implements IProduct {
     this.price = product.price;
     this.stock = product.stock;
     this._id = product._id;
-    this.user = product.user;
+    this.seller = product.seller;
     this.createdAt = product.createdAt;
     this.updatedAt = product.updatedAt;
   }
@@ -29,11 +29,7 @@ const ProductSchema = new Schema<IProduct>(
     description: { type: String },
     price: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
-    user: {
-      _id: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      name: { type: String, required: true },
-      email: { type: String, required: true },
-    },
+    seller: { type: Schema.Types.ObjectId, ref: "User", required: true},
   },
   {
     timestamps: true,

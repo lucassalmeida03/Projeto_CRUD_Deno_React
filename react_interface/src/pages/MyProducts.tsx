@@ -212,6 +212,9 @@ export function MyProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const {
     products,
+    page,
+    setPage,
+    pagination,
     isLoading,
     deletingProductId,
     errorMessage,
@@ -264,8 +267,9 @@ export function MyProducts() {
             >
               <div>
                 <div className="flex items-center space-x-1.5 mb-3">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500" />
-                  <span className="text-[11px] font-bold text-cyan-600 uppercase tracking-wide">
+                  <span
+                    className={`${product.stock < 5 ? 'text-[11px] font-bold text-red-600 uppercase tracking-wide' : 'text-[11px] font-bold text-cyan-600 uppercase tracking-wide'}`}
+                  >
                     {product.stock} em estoque
                   </span>
                 </div>
@@ -308,6 +312,31 @@ export function MyProducts() {
             </div>
           ))}
         </div>
+
+        {!isLoading && pagination.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-8 pt-6 border-t border-gray-200">
+            <Button
+              className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => setPage((currentPage) => currentPage - 1)}
+              disabled={page <= 1}
+            >
+              Anterior
+            </Button>
+            <span
+              className="text-sm text-gray-500 text-center"
+              aria-live="polite"
+            >
+              Página {page} de {pagination.totalPages}
+            </span>
+            <Button
+              className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => setPage((currentPage) => currentPage + 1)}
+              disabled={page >= pagination.totalPages}
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
       </main>
 
       <ProductModal

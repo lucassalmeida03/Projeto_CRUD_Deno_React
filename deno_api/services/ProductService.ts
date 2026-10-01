@@ -11,10 +11,6 @@ class ProductService {
 
     const newProduct = await ProductModel.create(productEntity);
 
-    await UserModel.findByIdAndUpdate(productData.user._id, {
-      $push: { products: newProduct._id },
-    });
-
     return newProduct;
   }
 
@@ -38,13 +34,29 @@ class ProductService {
     };
   }
 
-  async findBySellerId(sellerId: string): Promise<IProduct[]> {
+  async findBySellerId(sellerId: string, page: number, limit: number) {
     if (!isValidObjectId(sellerId)) {
       throw throwlhos.err_badRequest("ID do vendedor inválido.");
     }
 
-    return await ProductModel.find().where("user._id").equals(sellerId)
-      .sort({ createdAt: -1 });
+    const filter = { seller: sellerId };
+    const [products, totalProducts] = await Promise.all([
+      ProductModel.find(filter)
+        .sort({ createdAt: -1, _id: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      ProductModel.countDocuments(filter),
+    ]);
+
+    return {
+      products,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalProducts / limit),
+      },
+    };
   }
 
   async updateProduct(
@@ -63,12 +75,14 @@ class ProductService {
       throw throwlhos.err_badRequest("Produto não encontrado.");
     }
 
-    if (!product.user._id) {
+    if (!product.seller) {
       throw throwlhos.err_badRequest("Id do dono do produto inexistente.");
     }
 
-    const ownerId = typeof product.user === "object" && "_id" in product.user
-      ? product.user._id.toString() : ""
+    const ownerId =
+      typeof product.seller === "object" && "_id" in product.seller
+        ? product.seller.toString()
+        : "";
 
     const isOwner = ownerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;
@@ -79,14 +93,13 @@ class ProductService {
       );
     }
 
-    for (const field of ["title", "description", "price", "stock"] as const) {
-      if (field in updateData) {
-        product.set(field, updateData[field]);
-      }
-    }
-    await product.save();
+    await ProductModel.findByIdAndUpdate(
+      { _id: id },
+      { $set: updateData },
+    );
 
-    return product
+
+    return product;
   }
 
   async deleteProduct(
@@ -104,13 +117,14 @@ class ProductService {
       throw throwlhos.err_badRequest("Produto não encontrado.");
     }
 
-    if (!product.user._id) {
+    if (!product.seller) {
       throw throwlhos.err_badRequest("Id do usuário inexistente.");
     }
 
-    const ownerId = typeof product.user === "object" && "_id" in product.user
-      ? product.user._id.toString()
-      : ""
+    const ownerId =
+      typeof product.seller === "object" && "_id" in product.seller
+        ? product.seller.toString()
+        : "";
 
     const isOwner = ownerId === userId;
     const isAdmin = userRoleRequest === userRole.ADMIN;

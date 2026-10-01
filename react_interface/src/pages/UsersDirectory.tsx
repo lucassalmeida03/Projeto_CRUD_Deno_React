@@ -79,7 +79,7 @@ export function UsersDirectory() {
                   </div>
 
                   <Button
-                    className="w-25 bg-red-600 hover:bg-red-700"
+                    className="w-20 h-10 bg-red-600 hover:bg-red-700"
                     isLoading={deletingUserId === user._id}
                     onClick={() => void removeUser(user)}
                   >
@@ -99,8 +99,11 @@ export function UsersDirectory() {
               >
                 Anterior
               </Button>
-              <span className="text-sm text-gray-500 text-center" aria-live="polite">
-                Página {page} de {pagination.totalPages} 
+              <span
+                className="text-sm text-gray-500 text-center"
+                aria-live="polite"
+              >
+                Página {page} de {pagination.totalPages}
               </span>
               <Button
                 className="w-full sm:w-auto min-w-28 h-10 rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
