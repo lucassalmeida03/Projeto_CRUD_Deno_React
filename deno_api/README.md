@@ -81,8 +81,8 @@ retornados pela sua instalação.
 ## Rotas
 
 Todas as rotas abaixo usam a base `http://localhost:3000`. As rotas de
-`/products` e `/orders` exigem autenticação; as rotas de usuários também
-exigem JWT, exceto o cadastro. O acesso por papel é aplicado conforme a tabela:
+`/products` e `/orders` exigem autenticação; as rotas de usuários também exigem
+JWT, exceto o cadastro. O acesso por papel é aplicado conforme a tabela:
 
 | Método   | Caminho                 | Acesso                                                                              |
 | -------- | ----------------------- | ----------------------------------------------------------------------------------- |

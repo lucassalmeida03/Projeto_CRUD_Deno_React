@@ -43,7 +43,7 @@ Deno.test("should create a new session", async () => {
     MockResponser,
   );
 
-  assertEquals(result.code, 200);
+  assertEquals(result.code, 201);
   assertEquals(result.message, "Sessão criada com sucesso!");
   assertExists(result.data);
   assertExists(result.data.token);

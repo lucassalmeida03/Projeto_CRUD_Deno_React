@@ -7,12 +7,12 @@ const ordersController = new OrdersController();
 
 ordersRoutes.post(
   "/",
-  verifyUserAuthorization(["customer", "admin"]),
+  verifyUserAuthorization(["customer"]),
   ordersController.create,
 );
 ordersRoutes.get(
   "/my-orders",
-  verifyUserAuthorization(["customer", "admin"]),
+  verifyUserAuthorization(["customer"]),
   ordersController.getOrders,
 );
 ordersRoutes.get(
@@ -20,7 +20,11 @@ ordersRoutes.get(
   verifyUserAuthorization(["seller", "admin"]),
   ordersController.getSales,
 );
-ordersRoutes.patch("/:id/cancel", ordersController.cancel);
+ordersRoutes.patch(
+  "/:id/cancel",
+  verifyUserAuthorization(["customer", "seller"]),
+  ordersController.cancel,
+);
 ordersRoutes.patch(
   "/:id/pay",
   verifyUserAuthorization(["admin", "seller"]),
@@ -29,7 +33,7 @@ ordersRoutes.patch(
 
 ordersRoutes.delete(
   "/:id/delete",
-  verifyUserAuthorization(["customer", "admin"]),
+  verifyUserAuthorization(["customer"]),
   ordersController.delete,
 );
 

@@ -182,7 +182,7 @@ Deno.test("should not get all users - authorization failure", async () => {
 });
 
 // delete - negative - autorização
-Deno.test("should not delete a user with a different user id", async () => {
+Deno.test("should not delete a user - authorization failure", async () => {
   const user = await UserModel.findOne({ email: testEmail });
 
   assertExists(user, "O usuário deveria existir");

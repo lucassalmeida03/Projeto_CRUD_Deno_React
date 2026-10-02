@@ -57,7 +57,7 @@ class sessionsController {
       const userObject = user.toObject();
       const { password: _hashedPassword, ...userWithoutPassword } = userObject;
 
-      return res.send_ok("Sessão criada com sucesso!", {
+      return res.send_created("Sessão criada com sucesso!", {
         token,
         user: userWithoutPassword,
       });

@@ -60,4 +60,3 @@ export async function markOrderAsPaid(orderId: string): Promise<Order> {
   );
   return response.data.data.data;
 }
-
