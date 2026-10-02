@@ -89,18 +89,18 @@ exigem JWT, exceto o cadastro. O acesso por papel é aplicado conforme a tabela:
 | `POST`   | `/sessions`             | Público                                                                             |
 | `POST`   | `/users`                | Público                                                                             |
 | `GET`    | `/users`                | `admin`                                                                             |
-| `DELETE` | `/users/:id`            | Usuário autenticado; dono do perfil ou `admin`                                      |
+| `DELETE` | `/users/:id`            | Usuário autenticado; `admin`                                                        |
 | `POST`   | `/products`             | `seller` ou `admin`                                                                 |
 | `GET`    | `/products`             | `customer` ou `admin`                                                               |
 | `GET`    | `/products/my-products` | `seller` ou `admin`; filtra pelo usuário autenticado                                |
 | `PUT`    | `/products/:id`         | `seller` ou `admin`; vendedor dono do produto ou `admin`                            |
 | `DELETE` | `/products/:id`         | `seller` ou `admin`; vendedor dono do produto ou `admin`                            |
-| `POST`   | `/orders`               | `customer` ou `admin`                                                               |
-| `GET`    | `/orders/my-orders`     | `customer` ou `admin`                                                               |
+| `POST`   | `/orders`               | `customer`                                                                          |
+| `GET`    | `/orders/my-orders`     | `customer`                                                                          |
 | `GET`    | `/orders/my-sales`      | `seller` ou `admin`                                                                 |
-| `PATCH`  | `/orders/:id/cancel`    | Usuário autenticado; cliente ou vendedor associado ao pedido                        |
-| `PATCH`  | `/orders/:id/pay`       | `seller` ou `admin`; o service também exige que o usuário seja o vendedor do pedido |
-| `DELETE` | `/orders/:id/delete`    | `customer` ou `admin`; cliente dono ou `admin`, somente pedido cancelado            |
+| `PATCH`  | `/orders/:id/cancel`    | Usuário autenticado; cliente                                                        |
+| `PATCH`  | `/orders/:id/pay`       | `seller` o service exige que o usuário seja o vendedor do pedido                    |
+| `DELETE` | `/orders/:id/delete`    | `customer` cliente somente pedido cancelado                                         |
 
 As rotas `GET /users`, `GET /products`, `GET /products/my-products`,
 `GET /orders/my-orders` e `GET /orders/my-sales` aceitam `page` e `limit` na
@@ -193,10 +193,6 @@ Response `201 Created` (exemplo abreviado):
 }
 ```
 
-**Atenção:** o controller atual inclui o hash da senha no objeto retornado pelo
-cadastro. Embora não seja a senha original, esse hash não deve ser exposto; o
-backend deve removê-lo antes de responder.
-
 #### `GET /users` — listar usuários (admin)
 
 Request:
@@ -233,7 +229,7 @@ Response `200 OK` (exemplo abreviado):
 }
 ```
 
-#### `DELETE /users/:id` — excluir usuário (usuário autenticado; dono ou admin)
+#### `DELETE /users/:id` — excluir usuário (admin)
 
 Request:
 
@@ -340,7 +336,7 @@ Response `200 OK` (exemplo abreviado):
 }
 ```
 
-#### `GET /products/my-products` — produtos do vendedor (seller ou admin)
+#### `GET /products/my-products` — produtos do vendedor (seller)
 
 A consulta filtra produtos pelo ID do usuário autenticado.
 
@@ -378,7 +374,7 @@ Response `200 OK` (formato igual ao catálogo; lista abreviada):
 }
 ```
 
-#### `PUT /products/:id` — atualizar produto (seller ou admin; dono do produto ou admin)
+#### `PUT /products/:id` — atualizar produto (seller; dono do produto)
 
 Request:
 
@@ -419,7 +415,7 @@ Response `200 OK` (abreviado):
 }
 ```
 
-#### `DELETE /products/:id` — excluir produto (seller ou admin; dono do produto ou admin)
+#### `DELETE /products/:id` — excluir produto (seller; dono do produto)
 
 Request:
 
@@ -441,10 +437,6 @@ Response `200 OK`:
   "status": "OK"
 }
 ```
-
-O controller atualmente passa um objeto como primeiro argumento de `send_ok`;
-por isso o campo `message` pode conter um objeto. Esse formato é inconsistente
-com as outras respostas.
 
 ### Pedidos
 
@@ -504,7 +496,7 @@ Response `201 Created` (formato atual, abreviado):
 }
 ```
 
-#### `GET /orders/my-orders` — compras do usuário (customer ou admin)
+#### `GET /orders/my-orders` — compras do usuário (customer)
 
 Request:
 
@@ -534,7 +526,7 @@ Response `200 OK` (formato atual):
 
 A lista é filtrada pelo ID do usuário autenticado.
 
-#### `GET /orders/my-sales` — vendas do usuário (seller ou admin)
+#### `GET /orders/my-sales` — vendas do usuário (seller)
 
 Request:
 
@@ -611,7 +603,7 @@ Response `200 OK` (formato atual, abreviado):
 }
 ```
 
-#### `PATCH /orders/:id/pay` — marcar pedido como pago (seller ou admin; vendedor dono da venda)
+#### `PATCH /orders/:id/pay` — marcar pedido como pago (seller; vendedor dono da venda)
 
 O service exige que o pedido não esteja cancelado ou pago e verifica que o
 usuário é o vendedor associado. Apesar de `admin` passar pelo middleware de
@@ -643,7 +635,7 @@ Response `200 OK` (formato atual, abreviado):
 }
 ```
 
-#### `DELETE /orders/:id/delete` — excluir pedido cancelado (customer dono ou admin)
+#### `DELETE /orders/:id/delete` — excluir pedido cancelado (customer)
 
 Somente pedidos com status `canceled` podem ser removidos.
 
