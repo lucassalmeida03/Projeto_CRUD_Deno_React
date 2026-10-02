@@ -33,7 +33,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     status: "INTERNAL_SERVER_ERROR",
     message: err instanceof Error ? err.message : "Erro interno do servidor",
   });
-  
 });
 await connectDB();
 

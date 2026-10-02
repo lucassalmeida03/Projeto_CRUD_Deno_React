@@ -58,21 +58,24 @@ Deno.test("should not create a new user with same email", async () => {
 });
 
 // Create - negative - validação
-Deno.test("should not create a new user with less 6 caracteres password", async () => {
-  const payload = {
-    name: "Usuario Teste Deno",
-    password: "-6car",
-    email: testEmail,
-    role: "customer",
-  };
+Deno.test(
+  "should not create a new user with less 6 caracteres password",
+  async () => {
+    const payload = {
+      name: "Usuario Teste Deno",
+      password: "-6car",
+      email: testEmail,
+      role: "customer",
+    };
 
-  const MockRequest = { body: payload } as unknown as Request;
+    const MockRequest = { body: payload } as unknown as Request;
 
-  const result = await UsersController.create(MockRequest, MockResponser);
+    const result = await UsersController.create(MockRequest, MockResponser);
 
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Erro de validação");
-});
+    assertEquals(result.code, 400);
+    assertEquals(result.message, "Erro de validação");
+  },
+);
 
 // GETALL - Positive
 Deno.test("should get all users", async () => {
@@ -89,6 +92,7 @@ Deno.test("should get all users", async () => {
         _id: admin._id.toString(),
         role: userRole.ADMIN,
       },
+      query: {},
     } as unknown as Request;
 
     const result = await UsersController.getAll(MockRequest, MockResponser);
@@ -101,6 +105,63 @@ Deno.test("should get all users", async () => {
     await UserModel.deleteOne({ email: testEmailAdmin });
   }
 });
+
+Deno.test("should get all users with valid pagination", async () => {
+  const admin = await UserModel.create({
+    name: "Admin Pagination Test",
+    email: testEmailAdmin,
+    password: "senhaSegura123",
+    role: userRole.ADMIN,
+  });
+
+  try {
+    const MockRequest = {
+      user: {
+        _id: admin._id.toString(),
+        role: userRole.ADMIN,
+      },
+      query: { page: "2", limit: "12" },
+    } as unknown as Request;
+
+    const result = await UsersController.getAll(MockRequest, MockResponser);
+
+    assertEquals(result.code, 200);
+    assertEquals(result.message, "Usuarios encontrados:");
+    assertExists(result.data);
+  } finally {
+    await UserModel.deleteOne({ email: testEmailAdmin });
+  }
+});
+
+Deno.test(
+  "should get all users with non-positive pagination values",
+  async () => {
+    const admin = await UserModel.create({
+      name: "Admin Pagination Test",
+      email: testEmailAdmin,
+      password: "senhaSegura123",
+      role: userRole.ADMIN,
+    });
+
+    try {
+      const MockRequest = {
+        user: {
+          _id: admin._id.toString(),
+          role: userRole.ADMIN,
+        },
+        query: { page: "0", limit: "0" },
+      } as unknown as Request;
+
+      const result = await UsersController.getAll(MockRequest, MockResponser);
+
+      assertEquals(result.code, 200);
+      assertEquals(result.message, "Usuarios encontrados:");
+      assertExists(result.data);
+    } finally {
+      await UserModel.deleteOne({ email: testEmailAdmin });
+    }
+  },
+);
 
 // GETALL - Negative - autorização
 Deno.test("should not get all users - authorization failure", async () => {
@@ -134,10 +195,7 @@ Deno.test("should not delete a user with a different user id", async () => {
     },
   } as unknown as Request;
 
-  const result = await UsersController.deleteUser(
-    MockRequest,
-    MockResponser,
-  );
+  const result = await UsersController.deleteUser(MockRequest, MockResponser);
 
   assertEquals(result.code, 400);
   assertEquals(result.message, "Não foi possível concluir a operação.");
@@ -157,10 +215,7 @@ Deno.test("should delete a user", async () => {
     },
   } as unknown as Request;
 
-  const result = await UsersController.deleteUser(
-    MockRequest,
-    MockResponser,
-  );
+  const result = await UsersController.deleteUser(MockRequest, MockResponser);
 
   assertEquals(result.code, 200);
   assertEquals(

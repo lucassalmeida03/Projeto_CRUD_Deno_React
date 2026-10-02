@@ -1,6 +1,5 @@
 import { IBaseInterface } from "../../base/IBaseInterface.ts";
 
-
 export enum userRole {
   ADMIN = "admin",
   SELLER = "seller",

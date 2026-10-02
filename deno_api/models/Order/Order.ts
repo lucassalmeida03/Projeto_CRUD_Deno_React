@@ -60,6 +60,9 @@ const OrderSchema = new Schema<IOrder>(
   },
 );
 
+OrderSchema.index({ "customer._id": 1, createdAt: -1, _id: 1 });
+OrderSchema.index({ "seller._id": 1, createdAt: -1, _id: 1 });
+
 OrderSchema.loadClass(OrderClass);
 
 export const OrderModel = model<IOrder>("Order", OrderSchema);

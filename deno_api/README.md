@@ -80,6 +80,33 @@ retornados pela sua instalação.
 
 ## Rotas
 
+Todas as rotas abaixo usam a base `http://localhost:3000`. As rotas de
+`/products` e `/orders` exigem autenticação; as rotas de usuários também
+exigem JWT, exceto o cadastro. O acesso por papel é aplicado conforme a tabela:
+
+| Método   | Caminho                 | Acesso                                                                              |
+| -------- | ----------------------- | ----------------------------------------------------------------------------------- |
+| `POST`   | `/sessions`             | Público                                                                             |
+| `POST`   | `/users`                | Público                                                                             |
+| `GET`    | `/users`                | `admin`                                                                             |
+| `DELETE` | `/users/:id`            | Usuário autenticado; dono do perfil ou `admin`                                      |
+| `POST`   | `/products`             | `seller` ou `admin`                                                                 |
+| `GET`    | `/products`             | `customer` ou `admin`                                                               |
+| `GET`    | `/products/my-products` | `seller` ou `admin`; filtra pelo usuário autenticado                                |
+| `PUT`    | `/products/:id`         | `seller` ou `admin`; vendedor dono do produto ou `admin`                            |
+| `DELETE` | `/products/:id`         | `seller` ou `admin`; vendedor dono do produto ou `admin`                            |
+| `POST`   | `/orders`               | `customer` ou `admin`                                                               |
+| `GET`    | `/orders/my-orders`     | `customer` ou `admin`                                                               |
+| `GET`    | `/orders/my-sales`      | `seller` ou `admin`                                                                 |
+| `PATCH`  | `/orders/:id/cancel`    | Usuário autenticado; cliente ou vendedor associado ao pedido                        |
+| `PATCH`  | `/orders/:id/pay`       | `seller` ou `admin`; o service também exige que o usuário seja o vendedor do pedido |
+| `DELETE` | `/orders/:id/delete`    | `customer` ou `admin`; cliente dono ou `admin`, somente pedido cancelado            |
+
+As rotas `GET /users`, `GET /products`, `GET /products/my-products`,
+`GET /orders/my-orders` e `GET /orders/my-sales` aceitam `page` e `limit` na
+query string. `page` padrão é `1`; o limite padrão e máximo é `7` para usuários
+e pedidos, e `12` para produtos. Valores ausentes ou inválidos usam o padrão.
+
 ### Sessões
 
 #### `POST /sessions` — login (pública)
@@ -175,7 +202,7 @@ backend deve removê-lo antes de responder.
 Request:
 
 ```http
-GET /users
+GET /users?page=1&limit=7
 Authorization: Bearer <token-admin>
 ```
 
@@ -193,7 +220,13 @@ Response `200 OK` (exemplo abreviado):
         "email": "maria@example.com",
         "role": "customer"
       }
-    ]
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 7,
+      "totalUsers": 1,
+      "totalPages": 1
+    }
   },
   "code": 200,
   "status": "OK"
@@ -224,8 +257,8 @@ Response `200 OK`:
 
 #### `POST /products` — criar produto (seller ou admin)
 
-O `user` do produto é definido pelo usuário autenticado. Não envie esse campo no
-body.
+O campo `seller` do produto é definido pelo usuário autenticado. Não envie esse
+campo no body.
 
 Request:
 
@@ -257,7 +290,7 @@ Response `201 Created` (formato atual, abreviado):
       "description": "Teclado mecânico com iluminação RGB.",
       "price": 299.9,
       "stock": 10,
-      "user": "66f4b8f2c3a21a0012345678",
+      "seller": "66f4b8f2c3a21a0012345678",
       "createdAt": "2026-09-25T12:00:00.000Z",
       "updatedAt": "2026-09-25T12:00:00.000Z"
     }
@@ -275,7 +308,7 @@ para o `responser`.
 Request:
 
 ```http
-GET /products
+GET /products?page=1&limit=12
 Authorization: Bearer <token-customer-ou-admin>
 ```
 
@@ -293,14 +326,14 @@ Response `200 OK` (exemplo abreviado):
         "description": "Teclado mecânico com iluminação RGB.",
         "price": 299.9,
         "stock": 10,
-        "user": {
-          "_id": "66f4b8f2c3a21a0012345678",
-          "name": "João Vendedor",
-          "email": "joao@example.com",
-          "role": "seller"
-        }
+        "seller": "66f4b8f2c3a21a0012345678"
       }
-    ]
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 12,
+      "totalPages": 1
+    }
   },
   "code": 200,
   "status": "OK"
@@ -314,7 +347,7 @@ A consulta filtra produtos pelo ID do usuário autenticado.
 Request:
 
 ```http
-GET /products/my-products
+GET /products/my-products?page=1&limit=12
 Authorization: Bearer <token-seller>
 ```
 
@@ -331,13 +364,14 @@ Response `200 OK` (formato igual ao catálogo; lista abreviada):
         "title": "Teclado Mecânico RGB",
         "price": 299.9,
         "stock": 10,
-        "user": {
-          "_id": "66f4b8f2c3a21a0012345678",
-          "name": "João Vendedor",
-          "email": "joao@example.com"
-        }
+        "seller": "66f4b8f2c3a21a0012345678"
       }
-    ]
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 12,
+      "totalPages": 1
+    }
   },
   "code": 200,
   "status": "OK"
@@ -475,7 +509,7 @@ Response `201 Created` (formato atual, abreviado):
 Request:
 
 ```http
-GET /orders/my-orders
+GET /orders/my-orders?page=1&limit=7
 Authorization: Bearer <token-customer>
 ```
 
@@ -486,7 +520,12 @@ Response `200 OK` (formato atual):
   "success": true,
   "message": "Operação concluída",
   "data": {
-    "data": []
+    "orders": [],
+    "pagination": {
+      "page": 1,
+      "limit": 7,
+      "totalPages": 0
+    }
   },
   "code": 200,
   "status": "OK"
@@ -500,7 +539,7 @@ A lista é filtrada pelo ID do usuário autenticado.
 Request:
 
 ```http
-GET /orders/my-sales
+GET /orders/my-sales?page=1&limit=7
 Authorization: Bearer <token-seller>
 ```
 
@@ -528,7 +567,12 @@ Response `200 OK` (exemplo abreviado):
         "totalAmount": 599.8,
         "status": "pending"
       }
-    ]
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 7,
+      "totalPages": 1
+    }
   },
   "code": 200,
   "status": "OK"

@@ -41,8 +41,10 @@ export class OrderService {
         );
       }
 
-      if(customerRole === userRole.ADMIN){
-        throw throwlhos.err_badRequest("Usuário Administrador não tem permissão para realizar pedidos.");
+      if (customerRole === userRole.ADMIN) {
+        throw throwlhos.err_badRequest(
+          "Usuário Administrador não tem permissão para realizar pedidos.",
+        );
       }
 
       product.stock -= quantity;

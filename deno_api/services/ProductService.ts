@@ -93,13 +93,17 @@ class ProductService {
       );
     }
 
-    await ProductModel.findByIdAndUpdate(
-      { _id: id },
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      id,
       { $set: updateData },
+      { new: true, runValidators: true },
     );
 
+    if (!updatedProduct) {
+      throw throwlhos.err_badRequest("Produto não encontrado.");
+    }
 
-    return product;
+    return updatedProduct;
   }
 
   async deleteProduct(

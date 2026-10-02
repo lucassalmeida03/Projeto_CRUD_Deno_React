@@ -6,5 +6,5 @@ export interface IProduct extends IBaseInterface {
   description?: string;
   price: number;
   stock: number;
-  seller: Schema.Types.ObjectId | string
+  seller: Schema.Types.ObjectId | string;
 }

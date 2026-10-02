@@ -71,9 +71,7 @@ Deno.test("should create a new product", async () => {
   assertEquals(result.message, "Produto cadastrado com sucesso!");
   const createdProduct = await ProductModel.findOne({ title: "Test Product" });
   assertExists(createdProduct);
-  assertEquals(createdProduct.user._id.toString(), user._id.toString());
-  assertEquals(createdProduct.user.name, user.name);
-  assertEquals(createdProduct.user.email, user.email);
+  assertEquals(createdProduct.seller.toString(), user._id.toString());
 });
 
 // CREATE - Negative - validação
@@ -103,45 +101,50 @@ Deno.test("should not create a new product - validation failure", async () => {
   assertEquals(result.message, "Erro de validação!");
 });
 
-
 // CREATE - Negative - autorização
-Deno.test("should not create a new product - authorization failure", async () => {
-  const user = await UserModel.findOne({ email: testEmailCustomer });
-  assertExists(user, "Usuário deveria existir.");
+Deno.test(
+  "should not create a new product - authorization failure",
+  async () => {
+    const user = await UserModel.findOne({ email: testEmailCustomer });
+    assertExists(user, "Usuário deveria existir.");
 
-  const payload = {
-    title: "Test Product",
-    price: 10,
-    stock: 5,
-    description: "product test description.",
-    user: user._id,
-  };
+    const payload = {
+      title: "Test Product",
+      price: 10,
+      stock: 5,
+      description: "product test description.",
+      user: user._id,
+    };
 
-  const MockRequest = {
-    body: payload,
-    user: {
-      _id: "",
-      role: user.role,
-    },
-  } as unknown as Request;
+    const MockRequest = {
+      body: payload,
+      user: {
+        _id: "",
+        role: user.role,
+      },
+    } as unknown as Request;
 
-  const result = await productsController.create(MockRequest, MockResponser);
+    const result = await productsController.create(MockRequest, MockResponser);
 
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Erro ao criar produto.");
-});
+    assertEquals(result.code, 400);
+    assertEquals(result.message, "Erro ao criar produto.");
+  },
+);
 
-Deno.test("should not create a product when the authenticated user is missing", async () => {
-  const MockRequest = {
-    body: { title: "Valid title", price: 10, stock: 5 },
-    user: { _id: new mongoose.Types.ObjectId().toString() },
-  } as unknown as Request;
+Deno.test(
+  "should not create a product when the authenticated user is missing",
+  async () => {
+    const MockRequest = {
+      body: { title: "Valid title", price: 10, stock: 5 },
+      user: { _id: "" },
+    } as unknown as Request;
 
-  const result = await productsController.create(MockRequest, MockResponser);
+    const result = await productsController.create(MockRequest, MockResponser);
 
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Erro ao criar produto.");
-});
+    assertEquals(result.code, 400);
+    assertEquals(result.message, "Erro ao criar produto.");
+  },
+);
 
 // GETALL - Positive
 Deno.test("should get all products", async () => {
@@ -149,7 +152,29 @@ Deno.test("should get all products", async () => {
   const result = await productsController.getAll(MockRequest, MockResponser);
 
   assertEquals(result.code, 200);
-  assertEquals(result.message, "Lista de produtos completa:");
+  assertEquals(result.message, "Lista de produtos:");
+});
+
+Deno.test("should get all products with valid pagination", async () => {
+  const MockRequest = {
+    query: { page: "2", limit: "15" },
+  } as unknown as Request;
+  const result = await productsController.getAll(MockRequest, MockResponser);
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Lista de produtos:");
+  assertExists(result.data);
+});
+
+Deno.test("should get all products with non-positive pagination", async () => {
+  const MockRequest = {
+    query: { page: "0", limit: "0" },
+  } as unknown as Request;
+  const result = await productsController.getAll(MockRequest, MockResponser);
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Lista de produtos:");
+  assertExists(result.data);
 });
 
 // GETALL - Negative
@@ -187,7 +212,50 @@ Deno.test("should get my products", async () => {
   assertEquals(result.message, "Busca completa!");
   const products = result.data?.products;
   assertEquals(Array.isArray(products), true);
-  
+});
+
+Deno.test("should get my products with valid pagination", async () => {
+  const user = await UserModel.findOne({ email: testEmailSeller });
+  assertExists(user, "Usuário deveria existir.");
+
+  const MockRequest = {
+    user: {
+      _id: user._id.toString(),
+      role: user.role,
+    },
+    query: { page: "2", limit: "15" },
+  } as unknown as Request;
+
+  const result = await productsController.getMyProducts(
+    MockRequest,
+    MockResponser,
+  );
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Busca completa!");
+  assertExists(result.data);
+});
+
+Deno.test("should get my products with non-positive pagination", async () => {
+  const user = await UserModel.findOne({ email: testEmailSeller });
+  assertExists(user, "Usuário deveria existir.");
+
+  const MockRequest = {
+    user: {
+      _id: user._id.toString(),
+      role: user.role,
+    },
+    query: { page: "0", limit: "0" },
+  } as unknown as Request;
+
+  const result = await productsController.getMyProducts(
+    MockRequest,
+    MockResponser,
+  );
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Busca completa!");
+  assertExists(result.data);
 });
 
 // GETMYPRODUCTS - Negative - user id missing

@@ -12,7 +12,7 @@ class OrdersController {
   create = async (req: Request, res: Response) => {
     try {
       const customerId = req.user._id;
-      const customerRole = req.user.role
+      const customerRole = req.user.role;
       const { productId, quantity = 1 } = req.body;
 
       if (!customerId) {

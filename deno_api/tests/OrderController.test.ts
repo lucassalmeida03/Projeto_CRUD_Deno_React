@@ -46,10 +46,11 @@ Deno.test.beforeAll(async () => {
 });
 
 Deno.test.afterAll(async () => {
+  const testUserIds = await getTestUserIds();
   await OrderModel.deleteMany({
     $or: [
-      { "customer._id": { $in: await getTestUserIds() } },
-      { "seller._id": { $in: await getTestUserIds() } },
+      { "customer._id": { $in: testUserIds } },
+      { "seller._id": { $in: testUserIds } },
     ],
   });
   await ProductModel.deleteOne({ title: "Order Test Product" });
@@ -67,32 +68,47 @@ async function getTestUserIds() {
   return users.map((user) => user._id);
 }
 
+async function getTestUser(email: string) {
+  const user = await UserModel.findOne({ email });
+  assertExists(user, `Usuário de teste não encontrado: ${email}`);
+  return user;
+}
+
+async function getTestProduct(seller: Awaited<ReturnType<typeof getTestUser>>) {
+  const product = await ProductModel.findOne({ title: "Order Test Product" });
+  if (product) return product;
+
+  return await ProductModel.create({
+    title: "Order Test Product",
+    price: 50,
+    stock: 10,
+    description: "Product used for order tests.",
+    seller: seller._id,
+  });
+}
+
+async function createTestOrder(
+  seller: Awaited<ReturnType<typeof getTestUser>>,
+  customer: Awaited<ReturnType<typeof getTestUser>>,
+  status: "pending" | "paid" | "canceled" = "pending",
+) {
+  const product = await getTestProduct(seller);
+
+  return await OrderModel.create({
+    customer: { _id: customer._id, name: customer.name, email: customer.email },
+    product: { _id: product._id, title: product.title, price: product.price },
+    seller: { _id: seller._id, name: seller.name, email: seller.email },
+    totalAmount: product.price,
+    quantity: 1,
+    status,
+  });
+}
+
 // CREATE - Positive
 Deno.test("should create an order successfully", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
+  const seller = await getTestUser(sellerEmail);
+  const customer = await getTestUser(customerEmail);
+  const product = await getTestProduct(seller);
 
   const MockRequest = {
     body: {
@@ -114,30 +130,9 @@ Deno.test("should create an order successfully", async () => {
 
 // CREATE - Negative - stock
 Deno.test("should not create an order - insufficient stock", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
+  const seller = await getTestUser(sellerEmail);
+  const customer = await getTestUser(customerEmail);
+  const product = await getTestProduct(seller);
 
   const MockRequest = {
     body: {
@@ -158,22 +153,8 @@ Deno.test("should not create an order - insufficient stock", async () => {
 
 // CREATE - Negative - authorization
 Deno.test("should not create an order - missing user id", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
+  const seller = await getTestUser(sellerEmail);
+  const product = await getTestProduct(seller);
 
   const MockRequest = {
     body: {
@@ -191,19 +172,14 @@ Deno.test("should not create an order - missing user id", async () => {
 
 // GETORDERS - Positive
 Deno.test("should get customer orders successfully", async () => {
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
+  const customer = await getTestUser(customerEmail);
 
   const MockRequest = {
     user: {
       _id: customer._id.toString(),
       role: customer.role,
     },
+    query: {},
   } as unknown as Request;
 
   const result = await ordersController.getOrders(MockRequest, MockResponser);
@@ -211,8 +187,41 @@ Deno.test("should get customer orders successfully", async () => {
   assertEquals(result.code, 200);
   assertEquals(result.message, "Operação concluída");
   assertExists(result.data);
-  assertEquals(Array.isArray(result.data.data), true);
+  assertEquals(Array.isArray(result.data.orders), true);
 });
+
+Deno.test("should get customer orders with valid pagination", async () => {
+  const customer = await getTestUser(customerEmail);
+
+  const MockRequest = {
+    user: { _id: customer._id.toString(), role: customer.role },
+    query: { page: "2", limit: "10" },
+  } as unknown as Request;
+
+  const result = await ordersController.getOrders(MockRequest, MockResponser);
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Operação concluída");
+  assertExists(result.data);
+});
+
+Deno.test(
+  "should get customer orders with non-positive pagination",
+  async () => {
+    const customer = await getTestUser(customerEmail);
+
+    const MockRequest = {
+      user: { _id: customer._id.toString(), role: customer.role },
+      query: { page: "0", limit: "0" },
+    } as unknown as Request;
+
+    const result = await ordersController.getOrders(MockRequest, MockResponser);
+
+    assertEquals(result.code, 200);
+    assertEquals(result.message, "Operação concluída");
+    assertExists(result.data);
+  },
+);
 
 // GETORDERS - Negative
 Deno.test("should not get customer orders - user missing", async () => {
@@ -228,25 +237,51 @@ Deno.test("should not get customer orders - user missing", async () => {
 
 // GETSALES - Positive
 Deno.test("should get seller sales successfully", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
+  const seller = await getTestUser(sellerEmail);
 
   const MockRequest = {
     user: {
       _id: seller._id.toString(),
       role: seller.role,
     },
+    query: {},
   } as unknown as Request;
 
   const result = await ordersController.getSales(MockRequest, MockResponser);
 
   assertEquals(result.code, 200);
   assertEquals(result.message, "Operação concluída");
+  assertExists(result.data);
+});
+
+Deno.test("should get seller sales with valid pagination", async () => {
+  const seller = await getTestUser(sellerEmail);
+
+  const MockRequest = {
+    user: { _id: seller._id.toString(), role: seller.role },
+    query: { page: "2", limit: "10" },
+  } as unknown as Request;
+
+  const result = await ordersController.getSales(MockRequest, MockResponser);
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Operação concluída");
+  assertExists(result.data);
+});
+
+Deno.test("should get seller sales with non-positive pagination", async () => {
+  const seller = await getTestUser(sellerEmail);
+
+  const MockRequest = {
+    user: { _id: seller._id.toString(), role: seller.role },
+    query: { page: "0", limit: "0" },
+  } as unknown as Request;
+
+  const result = await ordersController.getSales(MockRequest, MockResponser);
+
+  assertEquals(result.code, 200);
+  assertEquals(result.message, "Operação concluída");
+  assertExists(result.data);
 });
 
 // GETSALES - Negative
@@ -263,39 +298,8 @@ Deno.test("should not get seller sales - user missing", async () => {
 
 // CANCEL - Positive
 Deno.test("should cancel an order successfully", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
-
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "pending",
-  });
+  const customer = await getTestUser(customerEmail);
+  const order = await createTestOrder(await getTestUser(sellerEmail), customer);
 
   const MockRequest = {
     params: { id: order._id.toString() },
@@ -316,48 +320,10 @@ Deno.test("should cancel an order successfully", async () => {
 
 // CANCEL - Negative - authorization
 Deno.test("should not cancel an order - authorization failure", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const secondCustomer =
-    await UserModel.findOne({ email: secondCustomerEmail }) ??
-      await UserModel.create({
-        name: "Second Customer",
-        email: secondCustomerEmail,
-        password: "senhaSegura123",
-        role: userRole.CUSTOMER,
-      });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
-
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "pending",
-  });
+  const seller = await getTestUser(sellerEmail);
+  const customer = await getTestUser(customerEmail);
+  const secondCustomer = await getTestUser(secondCustomerEmail);
+  const order = await createTestOrder(seller, customer);
 
   const MockRequest = {
     params: { id: order._id.toString() },
@@ -375,39 +341,8 @@ Deno.test("should not cancel an order - authorization failure", async () => {
 
 // MARKASPAID - Positive
 Deno.test("should mark an order as paid successfully", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
-
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "pending",
-  });
+  const seller = await getTestUser(sellerEmail);
+  const order = await createTestOrder(seller, await getTestUser(customerEmail));
 
   const MockRequest = {
     params: { id: order._id.toString() },
@@ -424,90 +359,39 @@ Deno.test("should mark an order as paid successfully", async () => {
 });
 
 // MARKASPAID - Negative - authorization
-Deno.test("should not mark an order as paid - authorization failure", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
+Deno.test(
+  "should not mark an order as paid - authorization failure",
+  async () => {
+    const seller = await getTestUser(sellerEmail);
+    const customer = await getTestUser(customerEmail);
+    const order = await createTestOrder(seller, customer);
 
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
+    const MockRequest = {
+      params: { id: order._id.toString() },
+      user: {
+        _id: customer._id.toString(),
+        role: customer.role,
+      },
+    } as unknown as Request;
 
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
+    const result = await ordersController.markAsPaid(
+      MockRequest,
+      MockResponser,
+    );
 
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "pending",
-  });
-
-  const MockRequest = {
-    params: { id: order._id.toString() },
-    user: {
-      _id: customer._id.toString(),
-      role: customer.role,
-    },
-  } as unknown as Request;
-
-  const result = await ordersController.markAsPaid(MockRequest, MockResponser);
-
-  assertEquals(result.code, 400);
-  assertEquals(result.message, "Erro ao atualizar pagamento do pedido.");
-});
+    assertEquals(result.code, 400);
+    assertEquals(result.message, "Erro ao atualizar pagamento do pedido.");
+  },
+);
 
 // DELETE - Positive
 Deno.test("should delete a canceled order successfully", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
-
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "canceled",
-  });
+  const customer = await getTestUser(customerEmail);
+  const order = await createTestOrder(
+    await getTestUser(sellerEmail),
+    customer,
+    "canceled",
+  );
 
   const MockRequest = {
     params: { id: order._id.toString() },
@@ -525,48 +409,13 @@ Deno.test("should delete a canceled order successfully", async () => {
 
 // DELETE - Negative - authorization
 Deno.test("should not delete an order - authorization failure", async () => {
-  const seller = await UserModel.findOne({ email: sellerEmail }) ??
-    await UserModel.create({
-      name: "Order Seller",
-      email: sellerEmail,
-      password: "senhaSegura123",
-      role: userRole.SELLER,
-    });
-
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
-
-  const secondCustomer =
-    await UserModel.findOne({ email: secondCustomerEmail }) ??
-      await UserModel.create({
-        name: "Second Customer",
-        email: secondCustomerEmail,
-        password: "senhaSegura123",
-        role: userRole.CUSTOMER,
-      });
-
-  const product = await ProductModel.findOne({ title: "Order Test Product" }) ??
-    await ProductModel.create({
-      title: "Order Test Product",
-      price: 50,
-      stock: 10,
-      description: "Product used for order tests.",
-      user: { _id: seller._id, name: seller.name, email: seller.email },
-    });
-
-  const order = await OrderModel.create({
-    customer: { _id: customer._id, name: customer.name, email: customer.email },
-    product: { _id: product._id, title: product.title, price: product.price },
-    seller: { _id: seller._id, name: seller.name, email: seller.email },
-    totalAmount: product.price,
-    quantity: 1,
-    status: "canceled",
-  });
+  const customer = await getTestUser(customerEmail);
+  const secondCustomer = await getTestUser(secondCustomerEmail);
+  const order = await createTestOrder(
+    await getTestUser(sellerEmail),
+    customer,
+    "canceled",
+  );
 
   const MockRequest = {
     params: { id: order._id.toString() },
@@ -584,13 +433,7 @@ Deno.test("should not delete an order - authorization failure", async () => {
 
 // DELETE - Negative - invalid id
 Deno.test("should not delete an order - invalid id", async () => {
-  const customer = await UserModel.findOne({ email: customerEmail }) ??
-    await UserModel.create({
-      name: "Order Customer",
-      email: customerEmail,
-      password: "senhaSegura123",
-      role: userRole.CUSTOMER,
-    });
+  const customer = await getTestUser(customerEmail);
 
   const MockRequest = {
     params: { id: "id_invalido" },

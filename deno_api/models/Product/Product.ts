@@ -29,12 +29,15 @@ const ProductSchema = new Schema<IProduct>(
     description: { type: String },
     price: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
-    seller: { type: Schema.Types.ObjectId, ref: "User", required: true},
+    seller: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   {
     timestamps: true,
   },
 );
+
+ProductSchema.index({ seller: 1, createdAt: -1, _id: 1 });
+ProductSchema.index({ createdAt: -1, _id: 1 });
 
 ProductSchema.loadClass(ProductClass);
 

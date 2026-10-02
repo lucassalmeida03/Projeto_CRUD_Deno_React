@@ -35,14 +35,14 @@ class ProductsController {
         return res.send_badRequest("Erro de validação!", { errors });
       }
 
-      const seller_id = req.user._id
+      const seller_id = req.user._id;
       if (!seller_id) {
         throw throwlhos.err_forbidden("Não autorizado.");
       }
 
       const productPayload = {
         ...req.body,
-        seller: seller_id
+        seller: seller_id,
       };
 
       const newProduct = await this.productService.createProduct(
