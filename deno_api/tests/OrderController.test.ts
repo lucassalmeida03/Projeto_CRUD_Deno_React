@@ -151,6 +151,27 @@ Deno.test("should not create an order - insufficient stock", async () => {
   assertEquals(result.message, "Não foi possível concluir a ação");
 });
 
+// CREATE - Negative - validation
+Deno.test("should not create an order - validation error", async () => {
+
+const seller = await getTestUser(sellerEmail);
+const product = await getTestProduct(seller);
+
+  const MockRequest = {
+    body: {
+      productId: product._id.toString(),
+      quantity: -1,
+    },
+    user: {},
+  } as unknown as Request;
+
+  const result = await ordersController.create(MockRequest, MockResponser);
+
+  assertEquals(result.code, 400);
+  assertEquals(result.message, "Erro de validação!");
+
+});
+
 // CREATE - Negative - authorization
 Deno.test("should not create an order - missing user id", async () => {
   const seller = await getTestUser(sellerEmail);

@@ -1,6 +1,20 @@
 import { Request, Response } from "express";
+import requestCheck from "request-check";
+import is from "@zarco/isness";
 import { OrderService } from "../services/OrderService.ts";
 import { throwlhos } from "../globals/Throwlhos.ts";
+
+const rc = requestCheck.default();
+
+rc.addRule("productId", {
+  validator: (value: string) => is.string(value) && value.trim().length > 0,
+  message: "O ID do produto é obrigatório.",
+});
+
+rc.addRule("quantity", {
+  validator: (value: number) => is.number(value) && Number.isInteger(value) && value > 0,
+  message: "A quantidade deve ser um número inteiro maior que zero.",
+});
 
 class OrdersController {
   private orderService: OrderService;
@@ -14,6 +28,11 @@ class OrdersController {
       const customerId = req.user._id;
       const customerRole = req.user.role;
       const { productId, quantity = 1 } = req.body;
+
+      const errors = rc.check({ productId }, { quantity });
+      if (errors) {
+        return res.send_badRequest("Erro de validação!", { errors });
+      }
 
       if (!customerId) {
         throw throwlhos.err_forbidden("Não autorizado.");
