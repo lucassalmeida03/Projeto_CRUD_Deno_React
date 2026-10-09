@@ -182,7 +182,6 @@ Response `201 Created` (exemplo abreviado):
       "_id": "66f4b8f2c3a21a0012345678",
       "name": "Maria Silva",
       "email": "maria@example.com",
-      "password": "<hash bcrypt>",
       "role": "customer",
       "createdAt": "2026-09-25T12:00:00.000Z",
       "updatedAt": "2026-09-25T12:00:00.000Z"

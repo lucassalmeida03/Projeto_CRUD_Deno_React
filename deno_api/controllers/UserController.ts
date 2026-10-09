@@ -58,7 +58,14 @@ class usersController {
         role,
       });
 
-      return res.send_created("Usuário criado com sucesso!", { newUser });
+      
+      const user = JSON.parse(JSON.stringify(newUser));
+
+      const { password: _, ...userWithoutPassword } = user;
+
+      return res.send_created("Usuário criado com sucesso!", {
+        newUser: userWithoutPassword,
+      });
     } catch (error) {
       return res.send_badRequest("Erro ao criar usuário", error);
     }
