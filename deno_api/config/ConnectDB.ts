@@ -16,3 +16,5 @@ export async function connectDB(): Promise<void> {
     console.error("Erro ao conectar ao MongoDB Atlas:", erro);
   }
 }
+
+

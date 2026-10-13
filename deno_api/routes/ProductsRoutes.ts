@@ -29,7 +29,7 @@ productsRoutes.get(
 );
 productsRoutes.get(
   "/my-products",
-  verifyUserAuthorization(["seller", "admin"]),
+  verifyUserAuthorization(["seller", "admin", "customer"]),
   productsController.getMyProducts,
 );
 

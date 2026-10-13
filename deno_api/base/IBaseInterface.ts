@@ -4,4 +4,5 @@ export interface IBaseInterface {
   _id?: Schema.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
+  save(): Promise<this>;
 }
